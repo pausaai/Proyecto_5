@@ -1,4 +1,3 @@
-import airport
 from airport import *
 #a = Airport()
 #a.icao = 'UUDD'
