@@ -44,5 +44,16 @@ def save_schengen():
   filename=fikedialog.asksaveasfilename(defaultextension=".txt")
   if filename:
     SaveSchengenAirports(airports, filename)
+def plot_airports():
+    if len(airports) == 0:
+        messagebox.showerror("Error", "No airports loaded")
+        return
+    PlotAirports(airports)
+
+def map_airports():
+    if len(airports) == 0:
+        messagebox.showerror("Error", "No airports loaded")
+        return
+    MapAirports(airports)
   
   
