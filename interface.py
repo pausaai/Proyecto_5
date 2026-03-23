@@ -1,22 +1,12 @@
 from airport import *
 import tkinter as tk
 from tkinter import messagebox, filedialog
-
-# GLOBAL DATA
 airports = []
-
-# -------------------------
-# HELPER FUNCTIONS
-# -------------------------
-
 def refresh_list():
     listbox.delete(0, tk.END)
     for a in airports:
         listbox.insert(tk.END, a.code)
-
-# -------------------------
-# BUTTON FUNCTIONS
-# -------------------------
+# BUTTON 
 
 def load_airports():
     global airports
@@ -24,17 +14,14 @@ def load_airports():
     if filename:
         airports = LoadAirports(filename)
         refresh_list()
-
 def add_airport():
     try:
         code = entry_code.get()
         lat = float(entry_lat.get())
         lon = float(entry_lon.get())
-
         a = Airport(code, lat, lon)
         SetSchengen(a)
         AddAirport(airports, a)
-
         refresh_list()
     except:
         messagebox.showerror("Error", "Invalid input")
@@ -71,9 +58,8 @@ def map_airports():
         return
     MapAirports(airports)
 
-# -------------------------
+--
 # GUI SETUP
-# -------------------------
 
 root = tk.Tk()
 root.title("Airport Manager")
