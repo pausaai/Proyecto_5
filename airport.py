@@ -30,15 +30,23 @@ def PrintAirport(Airport):
 
 
 def LoadAirports(filename):
+    def LoadAirports(filename):
     if filename == '':
-        print('')
-    else:
-        f = open(f'{filename}.txt', 'r')
-        f.readline()
-        print("CODE LAT     LON")
-        for line in f:
-            print(line)
-        f.close()
+        print('File cant be empty')
+        return
+    try:
+        with open(f'{filename}.txt', 'r') as f:
+            f.readline()  # Leer la primera línea (encabezados)
+            print("CODE LAT     LON")
+            for line in f:
+                print(line.strip())  # .strip() para eliminar espacios en blanco
+    except FileNotFoundError:
+        print(f'Error: El archivo {filename}.txt no se encontró.')
+    except ValueError as e:
+        print(f'Error de valor: {e}')  # Captura errores de formato
+    except Exception as e:
+        print(f'Error inesperado: {e}')  # Captura otros errores
+            
 
 
 def SaveSchengenAirports(airports, filename):
