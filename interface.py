@@ -28,3 +28,12 @@ def add_airport():
     refresh_list()
   except:
     messagebox.showerror("Error","Enter ICAO code")
+def delete_airport():
+  code= entry_code.get()
+  if code=="":
+    message.box.showerror("Error", "Enter ICAO code")
+    return
+  RemoveAirport(airports, code)
+  refresh_list()
+
+  
