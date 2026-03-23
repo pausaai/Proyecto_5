@@ -1,6 +1,7 @@
 import tkinter as tk 
-from airport.py* 
-from tkinter import messagebox ,filedialog
+  from airport.py* 
+  from tkinter import messagebox ,filedialog
+  airports=[]
+  root=tkinter.Tk()
 
-airports=[]
 
