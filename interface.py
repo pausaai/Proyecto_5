@@ -55,6 +55,48 @@ def map_airports():
         messagebox.showerror("Error", "No airports loaded")
         return
     MapAirports(airports)
+
+root = tk.Tk()
+root.title("Airport Manager")
+root.geometry("600x500")
+
+# TITLE
+tk.Label(root, text="Airport Manager", font=("Arial", 16)).pack(pady=10)
+
+# INPUT FRAME
+frame_inputs = tk.Frame(root)
+frame_inputs.pack(pady=10)
+
+tk.Label(frame_inputs, text="ICAO").grid(row=0, column=0)
+entry_code = tk.Entry(frame_inputs)
+entry_code.grid(row=0, column=1)
+
+tk.Label(frame_inputs, text="Latitude").grid(row=1, column=0)
+entry_lat = tk.Entry(frame_inputs)
+entry_lat.grid(row=1, column=1)
+
+tk.Label(frame_inputs, text="Longitude").grid(row=2, column=0)
+entry_lon = tk.Entry(frame_inputs)
+entry_lon.grid(row=2, column=1)
+
+# FRAME
+frame_buttons = tk.Frame(root)
+frame_buttons.pack(pady=10)
+
+tk.Button(frame_buttons, text="Load", width=15, command=load_airports).grid(row=0, column=0)
+tk.Button(frame_buttons, text="Add", width=15, command=add_airport).grid(row=0, column=1)
+tk.Button(frame_buttons, text="Delete", width=15, command=delete_airport).grid(row=1, column=0)
+tk.Button(frame_buttons, text="Show", width=15, command=show_airports).grid(row=1, column=1)
+tk.Button(frame_buttons, text="Save Schengen", width=15, command=save_schengen).grid(row=2, column=0)
+tk.Button(frame_buttons, text="Plot", width=15, command=plot_airports).grid(row=2, column=1)
+tk.Button(frame_buttons, text="Map", width=15, command=map_airports).grid(row=3, column=0)
+
+# LISTBOX
+listbox = tk.Listbox(root, width=70)
+listbox.pack(pady=20)
+
+# RUN APP
+root.mainloop()
   
   
   
