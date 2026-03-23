@@ -35,5 +35,14 @@ def delete_airport():
     return
   RemoveAirport(airports, code)
   refresh_list()
-
+def show_airports():
+  listbox.delete(0, tk.END)
+  for a in airports:
+    text= f"{a.code¨} , {a.lat} , {a.lon} Schengen: {a.schengen}"
+    listbox.insert(tk.END, text)
+def save_schengen():
+  filename=fikedialog.asksaveasfilename(defaultextension=".txt")
+  if filename:
+    SaveSchengenAirports(airports, filename)
+  
   
