@@ -31,8 +31,8 @@ def PrintAirport(Airport):
 
 def LoadAirports(filename):
     def LoadAirports(filename):
-    if filename == '':
-        print('File cant be empty')
+        if filename == '':
+            print('File cant be empty')
         return
     try:
         with open(f'{filename}.txt', 'r') as f:
