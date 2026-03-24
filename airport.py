@@ -23,32 +23,28 @@ def SetSchengen(Airport):
 
 
 def PrintAirport(Airport):
-    print("ICAO:", Airport.icao)
-    print("Latitude:", Airport.latitude)
-    print("Longitude:", Airport.longitude)
-    print("Schengen:", Airport.schengen)
-
-
+    try:
+        print("ICAO:", Airport.icao)
+        print("Latitude:", Airport.latitude)
+        print("Longitude:", Airport.longitude)
+        print("Schengen:", Airport.schengen)
+    except AttributeError:
+        print("Error invalid airport, try again")
 def LoadAirports(filename):
-    def LoadAirports(filename):
-        if filename == '':
+        if not filename == '':
             print('File cant be empty')
         return
     try:
         with open(f'{filename}.txt', 'r') as f:
-            f.readline()  # Leer la primera línea (encabezados)
+            headers= f.readline()  # Leer la primera línea del texto que nos mande Don Miguel
             print("CODE LAT     LON")
             for line in f:
-                print(line.strip())  # .strip() para eliminar espacios en blanco
+                print(line.strip())  # .strip() para eliminar espacios en blanco entre 
     except FileNotFoundError:
         print(f'Error: El archivo {filename}.txt no se encontró.')
-    except ValueError as e:
-        print(f'Error de valor: {e}')  # Captura errores de formato
     except Exception as e:
         print(f'Error inesperado: {e}')  # Captura otros errores
-            
-
-
+        
 def SaveSchengenAirports(airports, filename):
     if filename == '' or airports == []:
         print("Input a list of airports and a filename. The airport information must have the following format: ICAO N123456 W123456,ICAO...")
@@ -96,7 +92,6 @@ def RemoveAirport(airports, code):
                 f.write(lines[i])
             i = i + 1
         f.close()
-
 
 def PlotAirports(airports):
     f = open(f'{airports}.txt', 'r')
