@@ -9,7 +9,7 @@ class Airport:
 
 
 def IsSchengenAirport(code):
-    if code == '':
+    if code == '' or len(code)!= 4:
         return False
     zone = code[0] + code[1]
     if zone == 'GC' or zone == 'LO' or zone == 'EB' or zone == 'LK' or zone == 'LC' or zone == 'EK' or zone == 'EE' or zone == 'EF' or zone == 'LF' or zone == 'ED' or zone == 'LG' or zone == 'EH' or zone == 'LH' or zone == 'BI' or zone == 'LI' or zone == 'EV' or zone == 'EY' or zone == 'EL' or zone == 'LM' or zone == 'EN' or zone == 'EP' or zone == 'LP' or zone == 'LZ' or zone == 'LJ' or zone == 'LE' or zone == 'ES' or zone == 'LS':
@@ -29,24 +29,37 @@ def PrintAirport(Airport):
         print("Longitude:", Airport.longitude)
         print("Schengen:", Airport.schengen)
     except AttributeError:
-        print("Error invalid airport, try again")
+        print("Error, invalid airport.")
+
+
 def LoadAirports(filename):
-        if not filename == '':
-            print('File cant be empty')
-        return
     try:
-        with open(f'{filename}.txt', 'r') as f:
-            headers= f.readline()  # Leer la primera línea del texto que nos mande Don Miguel
-            print("CODE LAT     LON")
+        if filename == '':
+            print('')
+        else:
+            f = open(f'{filename}.txt', 'r')
+            f.readline()
+            print("CODE LAT LON")
             for line in f:
-                print(line.strip())  # .strip() para eliminar espacios en blanco entre 
+                print(line)
+            f.close()
     except FileNotFoundError:
-        print(f'Error: El archivo {filename}.txt no se encontró.')
-    except Exception as e:
-        print(f'Error inesperado: {e}')  # Captura otros errores
-        
+        print(f'{filename}.txt not found.')
+
+
+def CheckFormat(airport):
+    inputairport = airport.split(' ')
+    lat1 = inputairport[1]
+    lon1 = inputairport[2]
+    if len(inputairport[0]) != 4 or len(inputairport[1]) != 7 or lat1[0] != 'N' and lat1[0] != 'S' or len(
+            inputairport[2]) != 8 or lon1[0] != 'E' and lon1[0] != 'W':
+        return False
+    else:
+        return True
+
+
 def SaveSchengenAirports(airports, filename):
-    if filename == '' or airports == []:
+    if filename == '' or airports == [] or len(airports [0]) != 3:
         print("Input a list of airports and a filename. The airport information must have the following format: ICAO N123456 W123456,ICAO...")
     else:
         f = open(f'{filename}.txt', 'w')
@@ -63,10 +76,43 @@ def SaveSchengenAirports(airports, filename):
         f.close()
 
 
-def AddAirport(airports, airport):
-    f = open(f'{airports}.txt', 'a')
-    f.write(f'{airport}\n')
-    f.close()
+def AddAirport(file, airport):
+    try:
+        f = open(f'{file}.txt', 'r')
+        full = f.readlines()
+        f.close()
+    except FileNotFoundError:
+        print('File not found')
+        return
+    i = 0
+    found = False
+    try:
+        if file == '' or airport == '':
+            print('Please enter a filename and airport data in the right format.')
+            return
+        if not CheckFormat(airport):
+            print('Please review the airport format. Keep in mind that longitude has 3 integrers of degrees and latitude only has 2.')
+            return
+        else:
+            while i < len(full) and not found:
+                elements = full[i].split(' ')
+                if elements[0] == airport[0:4]:
+                    found = True
+                if not found:
+                    i = i + 1
+            if found:
+                print('Airport is already on the list.')
+            else:
+                f = open(f'{file}.txt', 'a')
+                last = full[-1].split(' ')
+                if '\n' in last[-1]:
+                    f.write(f'{airport}\n')
+                else:
+                    f.write(f'\n{airport}')
+                f.close()
+                print('Airport added to the list.')
+    except ValueError:
+        print('Revise el formato del aeropuerto.')
 
 
 def RemoveAirport(airports, code):
@@ -93,49 +139,60 @@ def RemoveAirport(airports, code):
             i = i + 1
         f.close()
 
+
 def PlotAirports(airports):
-    f = open(f'{airports}.txt', 'r')
-    lines = f.readlines()
-    f.close()
-    schengen = 0
-    notschengen = 0
-    i = 0
-    while i < len(lines):
-        code = lines[i].split()[0]
-        if IsSchengenAirport(code):
-            schengen = schengen + 1
-        else:
-            notschengen = notschengen + 1
-        i = i + 1
-    pyplot.bar('Airports', schengen, color='blue', label='Schengen')
-    pyplot.bar('Airports', notschengen, color='red', label='Not Schengen')
-    pyplot.title('Schengen Airports')
-    pyplot.ylabel('Count')
-    pyplot.legend()
-    pyplot.show()
+    try:
+        f = open(f'{airports}.txt', 'r')
+        lines = f.readlines()
+        f.close()
+        schengen = 0
+        notschengen = 0
+        i = 0
+        while i < len(lines):
+            code = lines[i].split()[0]
+            if IsSchengenAirport(code):
+                schengen = schengen + 1
+            else:
+                notschengen = notschengen + 1
+            i = i + 1
+        pyplot.bar('Airports', schengen, color='blue', label='Schengen')
+        pyplot.bar('Airports', notschengen, color='red', label='Not Schengen')
+        pyplot.title('Schengen Airports')
+        pyplot.ylabel('Count')
+        pyplot.legend()
+        pyplot.show()
+    except FileNotFoundError:
+        print(f'{airports}.txt does not exist.')
 
 
 def ConvertCoordinates(coord):
-    direction = coord [0]
-    if direction == 'N' or direction == 'S':
-        degrees = int(coord[1:3])
-        minutes = int(coord[3:5])
-        seconds = int(coord[5:7])
-    else:
-        degrees = int(coord[1:4])
-        minutes = int(coord[4:6])
-        seconds = int(coord[6:8])
-    decimal = degrees + minutes/60 + seconds/3600
-    if direction == 'S' or direction == 'W':
-        decimal = -decimal
-    return decimal
+    try:
+        direction = coord [0]
+        if direction == 'N' or direction == 'S':
+            degrees = int(coord[1:3])
+            minutes = int(coord[3:5])
+            seconds = int(coord[5:7])
+        else:
+            degrees = int(coord[1:4])
+            minutes = int(coord[4:6])
+            seconds = int(coord[6:8])
+        decimal = degrees + minutes/60 + seconds/3600
+        if direction == 'S' or direction == 'W':
+            decimal = -decimal
+        return decimal
+    except Exception:
+        print(f'{coord} is not a valid coordinate.')
+        return 0.0
 
 
 def MapAirports(airports):
-    f = open(f'{airports}.txt', 'r')
-    f.readline()
-    lines = f.readlines()
-    f.close()
+    try:
+        f = open(f'{airports}.txt', 'r')
+        f.readline()
+        lines = f.readlines()
+        f.close()
+    except FileNotFoundError:
+        print(f'{airports}.txt does not exist.')
     kml = open(f'{airports}.kml', 'w')
     kml.write('<kml xmlns="http://www.opengis.net/kml/2.2">\n')
     kml.write('<Document>\n')
