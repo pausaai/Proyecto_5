@@ -12,11 +12,9 @@ def IsSchengenAirport(code):
     if code == '' or len(code)!= 4:
         return False
     zone = code[0] + code[1]
-    f = open('SchengenCodes.txt')
-    codes = (f.readline())
-    codes = codes.split(' ')
-    f.close()
-    if zone in codes:
+    codes = ['LO','EB','LK', 'LC', 'EK', 'EE', 'EF', 'LF', 'ED', 'LG', 'EH', 'LH', 'BI', 'LI', 'EV', 'EY', 'EL', 'LM' ,'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS', 'GC', 'LD', 'LR', 'LB']
+    found = False
+    while not found:
         return True
     else:
         return False
@@ -43,7 +41,7 @@ def LoadAirports(filename):
         else:
             f = open(f'{filename}.txt', 'r')
             f.readline()
-            print("CODE LAT LON")
+            print('CODE LAT LON')
             for line in f:
                 print(line)
             f.close()
