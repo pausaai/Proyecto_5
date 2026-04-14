@@ -12,22 +12,26 @@ def IsSchengenAirport(code):
     if code == '' or len(code)!= 4:
         return False
     zone = code[0] + code[1]
-    if zone == 'GC' or zone == 'LO' or zone == 'EB' or zone == 'LK' or zone == 'LC' or zone == 'EK' or zone == 'EE' or zone == 'EF' or zone == 'LF' or zone == 'ED' or zone == 'LG' or zone == 'EH' or zone == 'LH' or zone == 'BI' or zone == 'LI' or zone == 'EV' or zone == 'EY' or zone == 'EL' or zone == 'LM' or zone == 'EN' or zone == 'EP' or zone == 'LP' or zone == 'LZ' or zone == 'LJ' or zone == 'LE' or zone == 'ES' or zone == 'LS':
+    f = open('SchengenCodes.txt')
+    codes = (f.readline())
+    codes = codes.split(' ')
+    f.close()
+    if zone in codes:
         return True
     else:
         return False
 
 
-def SetSchengen(Airport):
-    Airport.schengen = IsSchengenAirport(Airport.icao)
+def SetSchengen(airport):
+    Airport.schengen = IsSchengenAirport(airport.icao)
 
 
-def PrintAirport(Airport):
+def PrintAirport(airport):
     try:
-        print("ICAO:", Airport.icao)
-        print("Latitude:", Airport.latitude)
-        print("Longitude:", Airport.longitude)
-        print("Schengen:", Airport.schengen)
+        print("ICAO:", airport.icao)
+        print("Latitude:", airport.latitude)
+        print("Longitude:", airport.longitude)
+        print("Schengen:", airport.schengen)
     except AttributeError:
         print("Error, invalid airport.")
 
@@ -48,19 +52,25 @@ def LoadAirports(filename):
 
 
 def CheckFormat(airport):
-    inputairport = airport.split(' ')
-    lat1 = inputairport[1]
-    lon1 = inputairport[2]
-    if len(inputairport[0]) != 4 or len(inputairport[1]) != 7 or lat1[0] != 'N' and lat1[0] != 'S' or len(
-            inputairport[2]) != 8 or lon1[0] != 'E' and lon1[0] != 'W':
+    if airport == '':
         return False
-    else:
-        return True
+    tot = airport.split(',')
+    i = 0
+    while i < len(tot):
+        inputairport = tot[i].split()
+        lat = inputairport[1]
+        lon = inputairport[2]
+        if len(inputairport) != 3 or len(inputairport[0]) != 4 or len(lat) != 7 or lat[0] != 'N' and lat[0] != 'S' or len(lon) != 8 or lon[0] != 'E' and lon[0] != 'W':
+            return False
+        i = i+1
+    return True
 
 
 def SaveSchengenAirports(airports, filename):
-    if filename == '' or airports == [] or len(airports [0]) != 3:
+    if filename == '' or airports == []:
         print("Input a list of airports and a filename. The airport information must have the following format: ICAO N123456 W123456,ICAO...")
+    elif not CheckFormat(airports):
+        print("Check the Airport format.")
     else:
         f = open(f'{filename}.txt', 'w')
         f.write("CODE LAT     LON\n")
@@ -116,9 +126,14 @@ def AddAirport(file, airport):
 
 
 def RemoveAirport(airports, code):
-    f = open(f'{airports}.txt', 'r')
-    lines = f.readlines()
-    f.close()
+    try:
+        f = open(f'{airports}.txt', 'r')
+        f.readline()
+        lines = f.readlines()
+        f.close()
+    except FileNotFoundError:
+        print(f'{airports}.txt does not exist.')
+        return
     found = False
     i = 0
     while i < len(lines) and not found:
@@ -143,6 +158,7 @@ def RemoveAirport(airports, code):
 def PlotAirports(airports):
     try:
         f = open(f'{airports}.txt', 'r')
+        f.readline()
         lines = f.readlines()
         f.close()
         schengen = 0
@@ -193,6 +209,7 @@ def MapAirports(airports):
         f.close()
     except FileNotFoundError:
         print(f'{airports}.txt does not exist.')
+        return
     kml = open(f'{airports}.kml', 'w')
     kml.write('<kml xmlns="http://www.opengis.net/kml/2.2">\n')
     kml.write('<Document>\n')
