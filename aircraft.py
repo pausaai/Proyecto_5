@@ -142,3 +142,103 @@ def PlotFlightsType(aircrafts):
     pyplot.ylabel('Count')
     pyplot.legend()
     pyplot.show()
+    
+def DegreesToRadians(degrees):  #Había otra funcion que ya donde ya se tenia los vuelos en grados?
+    return degrees * (math.pi / 180)
+def HaversineDistance(lat1, lon1, lat2 , lon2):
+    RadioTierra=6371.0 #KM
+
+    rlat1= DegreesToRadians(lat1)
+    rlon1= DegreesToRadians(lon1)
+    rlat2= DegreesToRadians(lat2)
+    rlon2= DegreesToRadians(lon2)
+
+    diferencia_lat= rlat2 - rlat1
+    diferencia_lon= rlon2 - rlon1
+    #Usamos la formula del HAversine este
+
+    a=(math.sin(diferencia_lat/2)**2+math.cos(rlat1)*math.cos(rlat2)*math.sin(diferencia_lon/2)**2)
+
+    c=2*math.atan2(math.sqrt(a),math.sqrt(1-a))
+    distance = RadioTierra * c
+    return distance
+def FindAirports(aircrafts):
+    i=0
+    while i < len(aircrafts):
+        if Airport[i].icao== code:
+            return Airport[i]
+        i += 1
+    return None
+def MapFlights(aircrafts):
+    if len(aircrafts) == 0:
+        print('List is empty')
+        return
+     # Escribimos las coordenadas de LEBL
+    LEBLlon = 2.07833
+    LEBLlat = 41.29694
+    airports=LoadAirports('airports.txt')
+    kml=open('Flights.kml','w')
+    kml.write('<kml xmlns="http://www.opengis.net/kml/2.2">\n')
+    kml.write('<Document>\n')
+
+    i=0
+    while i < len(aircrafts):
+        codigoorigen = aircrafts[i].origin
+        AeropuertoOrigen=FindAirports(airports, codigoorigen)
+        if AeropuertoOrigen != None:
+            origenlat = AeropuertoOrigen.latitude
+            origenlon = AeropuertoOrigen.longitude
+        #Pillamos codigo para determinar si Schengen o no, discutir colores luego
+            if IsSchengenAirport(codigoorigen):
+                color='ffff0000'#Azul
+            else:
+                color='#ff0000ff'#Rojo
+            #Trayectoria/linea de origen a destino
+            kml.write('<Placemark>\n')
+            kml.write('<name>' + aircrafts[i].id + '</name>\n')
+            kml.write('<Style>\n')
+            kml.write('  <LineStyle>\n')
+            kml.write('    <color>' + color + '</color>\n')
+            kml.write('    <width>2</width>\n')
+            kml.write('  </LineStyle>\n')
+            kml.write('</Style>\n')
+            kml.write('<LineString>\n')
+            kml.write('  <altitudeMode>clampToGround</altitudeMode>\n')
+            kml.write('  <tessellate>1</tessellate>\n')
+            kml.write('  <coordinates>\n')
+
+            kml.write('  ' + str(origenlon) + ',' + str(origenlat) + '\n')
+            kml.write('  ' + str(LEBLlon) + ',' + str(LEBLlat) + '\n')
+            kml.write('  </coordinates>\n')
+            kml.write('</LineString>\n')
+            kml.write('</Placemark>\n')
+        i+=1
+    kml.write('</Document>\n')
+    kml.write('</kml>\n')
+    kml.close()
+    print('Flights.kml generated with ' + str(len(aircrafts)) + ' trajectories.')
+
+
+def LongDistanceArrivals(aircrafts):
+    if len(aircrafts) == 0:
+        print('List is empty')
+        return
+    i = 0
+    #Escribimos las coordenadas de LEBL
+    LEBLlon=2.07833
+    LEBLlat=41.29694
+
+    #Utilizamos la condicion de 2000KM
+    limite= 2000.0
+    airports=LoadAirports('airports')
+    mayorlimite=[]
+    i<0
+    while i < len(aircrafts):
+        origincode = aircrafts[i].origin
+        originairport= FindAirports(aircrafts, origincode)
+        if originairport != None:
+            dist = HaversineDistance(originairport.lat, originairport.lon, LEBLlat, LEBLlon)
+            if dist < limite:
+                mayorlimite.append(originairport)
+        i+= 1
+    return mayorlimite
