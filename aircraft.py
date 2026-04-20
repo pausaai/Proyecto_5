@@ -1,5 +1,5 @@
 from airport import *
-
+import math as math
 
 class Aircraft:
     def __init__(self):
@@ -142,9 +142,10 @@ def PlotFlightsType(aircrafts):
     pyplot.ylabel('Count')
     pyplot.legend()
     pyplot.show()
-    
+
 def DegreesToRadians(degrees):  #Había otra funcion que ya donde ya se tenia los vuelos en grados?
     return degrees * (math.pi / 180)
+
 def HaversineDistance(lat1, lon1, lat2 , lon2):
     RadioTierra=6371.0 #KM
 
@@ -162,13 +163,15 @@ def HaversineDistance(lat1, lon1, lat2 , lon2):
     c=2*math.atan2(math.sqrt(a),math.sqrt(1-a))
     distance = RadioTierra * c
     return distance
-def FindAirports(aircrafts):
+
+def FindAirports(airports, code):
     i=0
-    while i < len(aircrafts):
-        if Airport[i].icao== code:
-            return Airport[i]
+    while i < len(airports):
+        if airports[i].icao == code:
+            return airports[i]
         i += 1
     return None
+
 def MapFlights(aircrafts):
     if len(aircrafts) == 0:
         print('List is empty')
@@ -176,7 +179,7 @@ def MapFlights(aircrafts):
      # Escribimos las coordenadas de LEBL
     LEBLlon = 2.07833
     LEBLlat = 41.29694
-    airports=LoadAirports('airports.txt')
+    airports=LoadAirports()
     kml=open('Flights.kml','w')
     kml.write('<kml xmlns="http://www.opengis.net/kml/2.2">\n')
     kml.write('<Document>\n')
@@ -184,7 +187,7 @@ def MapFlights(aircrafts):
     i=0
     while i < len(aircrafts):
         codigoorigen = aircrafts[i].origin
-        AeropuertoOrigen=FindAirports(airports, codigoorigen)
+        AeropuertoOrigen = FindAirports(airports, codigoorigen)
         if AeropuertoOrigen != None:
             origenlat = AeropuertoOrigen.latitude
             origenlon = AeropuertoOrigen.longitude
@@ -218,7 +221,6 @@ def MapFlights(aircrafts):
     kml.close()
     print('Flights.kml generated with ' + str(len(aircrafts)) + ' trajectories.')
 
-
 def LongDistanceArrivals(aircrafts):
     if len(aircrafts) == 0:
         print('List is empty')
@@ -230,15 +232,14 @@ def LongDistanceArrivals(aircrafts):
 
     #Utilizamos la condicion de 2000KM
     limite= 2000.0
-    airports=LoadAirports('airports')
+    airports=LoadAirports()
     mayorlimite=[]
-    i<0
     while i < len(aircrafts):
         origincode = aircrafts[i].origin
-        originairport= FindAirports(aircrafts, origincode)
+        originairport= FindAirports(airports, origincode)
         if originairport != None:
-            dist = HaversineDistance(originairport.lat, originairport.lon, LEBLlat, LEBLlon)
-            if dist < limite:
-                mayorlimite.append(originairport)
+            dist = HaversineDistance(originairport.latitude, originairport.longitude, LEBLlat, LEBLlon)
+            if dist > limite:
+                mayorlimite.append(aircrafts[i])
         i+= 1
     return mayorlimite
