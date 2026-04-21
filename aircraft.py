@@ -56,17 +56,18 @@ def PlotArrivals(aircrafts):
     if len(aircrafts) == 0:
         print('List is empty')
         return
+    fig, ax = pyplot.subplots()
     count = [0]*24
     i = 0
     while i < len(aircrafts):
         hour = int(aircrafts[i].time.split(':')[0])
         count[hour] = count[hour] + 1
         i = i + 1
-    pyplot.bar(range(24), count)
-    pyplot.title('Landing Frequency')
-    pyplot.xlabel('Hour')
-    pyplot.ylabel('NUmber of landings')
-    pyplot.show()
+    ax.bar(range(24), count, color = "#d4664b")
+    ax.set_title('Landing Frequency')
+    ax.set_xlabel('Hour')
+    ax.set_ylabel('Number of landings')
+    return fig
 
 def SaveFlights(aircrafts):
     if len(aircrafts) == 0:
@@ -99,6 +100,7 @@ def PlotAirlines(aircrafts):
     if len(aircrafts) == 0:
         print('List is empty')
         return
+    fig, ax = pyplot.subplots()
     different = []
     count = []
     d = 0
@@ -115,17 +117,17 @@ def PlotAirlines(aircrafts):
             different = different + [current]
             count = count + [1]
         d = d + 1
-    pyplot.bar(different, count)
-    pyplot.title('Airline Flights')
-    pyplot.xlabel('Airlines')
-    pyplot.ylabel('Number of arriving aircraft')
-    pyplot.xticks(rotation=60, ha='right')
-    pyplot.show()
+    ax.bar(different, count, color = "#d4664b")
+    ax.set_title('Airline Flights')
+    ax.set_xlabel('Airlines')
+    ax.set_ylabel('Number of arriving aircraft')
+    return fig
 
 def PlotFlightsType(aircrafts):
     if len(aircrafts) == 0:
         print('List is empty')
         return
+    fig, ax = pyplot.subplots()
     schengen = 0
     notschengen = 0
     i = 0
@@ -136,12 +138,12 @@ def PlotFlightsType(aircrafts):
         else:
             notschengen = notschengen + 1
         i = i + 1
-    pyplot.bar('Schengen', schengen, color='blue', label='Schengen')
-    pyplot.bar('Not Schengen', notschengen, color='red', label='Not Schengen')
-    pyplot.title('Schengen Airports')
-    pyplot.ylabel('Count')
-    pyplot.legend()
-    pyplot.show()
+    ax.bar('Schengen', schengen, color='#d4664b', label='Schengen')
+    ax.bar('Not Schengen', notschengen, color='#ff5c3b', label='Not Schengen')
+    ax.set_title('Arrival Origin')
+    ax.set_ylabel('Count')
+    ax.legend()
+    return fig
 
 def DegreesToRadians(degrees):  #Había otra funcion que ya donde ya se tenia los vuelos en grados?
     return degrees * (math.pi / 180)
