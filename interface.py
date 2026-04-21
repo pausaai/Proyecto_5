@@ -3,7 +3,7 @@ import sys
 from tkinter import *
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from airport import *
+#from airport import *
 from aircraft import *
 
 try:
@@ -35,6 +35,10 @@ def PlotAl():
     canvas = FigureCanvasTkAgg(PlotAirlines(LoadArrivals()), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+def PlotArrRate():
+    canvas = FigureCanvasTkAgg(PlotArrivals(LoadArrivals()), master=frame3)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def PlotFlTy():
     canvas = FigureCanvasTkAgg(PlotFlightsType(LoadArrivals()), master=frame3)
     canvas.draw()
@@ -42,6 +46,12 @@ def PlotFlTy():
 def MapAp():
     MapAirports(LoadAirports())
     os.system("Start Airports.kml")
+def MapFl():
+    MapFlights(LoadArrivals())
+    os.system("Start Flights.kml")
+def MapFlLong():
+    MapFlights(LongDistanceArrivals(LoadArrivals()))
+    os.system("Start Flights.kml")
 def Save():
     try:
         a = Airport()
@@ -94,7 +104,12 @@ frame1.configure(bg='#f5e8c3', fg="#ff5c3b")
 frame1.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 frame1.columnconfigure(0, weight=1)
 Button(frame1, text="Plot Airports", command=PlotAp, bg='#d4664b', fg="white", font=FONT_B).grid(row=3, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Airports", command=MapAp,  bg='#d4664b', fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Arrivals by type", command=PlotFlTy, bg='#d4664b', fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Airlines", command=PlotAl, bg='#d4664b', fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Arrivals", command=PlotArrRate, bg='#d4664b', fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Map Airports", command=MapAp,  bg='#d4664b', fg="white", font=FONT_B).grid(row=7, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Map Arrivals", command=MapFl, bg='#d4664b', fg="white", font=FONT_B).grid(row=8, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Map Long Distance Arrivals", command=MapFlLong, bg='#d4664b', fg="white", font=FONT_B).grid(row=9, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
 
 frame2 = LabelFrame(root, text="Add / Save / Remove:", font=FONT_TITLE)
 frame2.configure(bg='#f5e8c3', fg="#ff5c3b")
