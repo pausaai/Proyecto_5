@@ -6,7 +6,7 @@ Pau Sala Aizpun
 
 VERSION 1
 
-link to video 1:
+link to video 1: https://docs.google.com/videos/d/1-ViKixjlHNZJM0pPLc_5unq64P_8r6PFtAhkDak1vSc/edit?usp=sharing
 
 VERSION 2 
   En la versión 2 tuvimos en cuenta el feedback de la versión 1 con tal de implementarlo en gran medida en la versión 2.
