@@ -221,7 +221,7 @@ def RemoveAirport(airports, code):
         return
 
     else:
-        f = open(f'Airports.txt', 'r')
+        f = open(f'Airports.txt', 'w')
         f.write("CODE LAT     LON\n")
         i = 0
         while i < len(new_airports):
