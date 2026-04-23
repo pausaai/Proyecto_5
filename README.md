@@ -19,7 +19,7 @@ VERSION 2
 
 En la versión 2 del proyecto hemos ampliado la funcion inicial centrada en aeropuertos para incorporar la gestión de vuelos de llegada a LEBL. Para ello, hemos definido la clase Aircraft con atributos clave como identificador, compañía, origen y hora, y desarrollado funciones para cargar datos desde ficheros, validarlos (por ejemplo, el formato de hora) y representarlos mediante gráficos. Además, hemos implementado visualizaciones como la frecuencia de aterrizajes por hora o por aerolínea, así como la distinción entre vuelos Schengen y no Schengen. También se ha añadido la generación de trayectorias en formato KML y el cálculo de distancias con la fórmula de Haversine , lo que permite identificar vuelos de larga distancia. Finalmente, para la realización de ciertas funciones clave como cambio de radianes con la finalidad de aplicar Haversine tuvimos en cuenta uno de los ejercicios iniciales introductorios al proyecto. 
   
-link to video 2:
+link to video 2: https://docs.google.com/videos/d/1cMkvCwagU7mwNASGqBdDtGf4jYHU1lI65GEgi64KV2Q/edit?usp=sharing
 
 VERSION 3
 link to video 3:
