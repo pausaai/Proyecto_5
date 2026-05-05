@@ -18,6 +18,8 @@ VERSION 2
   -Rehacer la función IsSchengen de manera que simplifiquemos el método de busqueda y recorrido.
 
 En la versión 2 del proyecto hemos ampliado la funcion inicial centrada en aeropuertos para incorporar la gestión de vuelos de llegada a LEBL. Para ello, hemos definido la clase Aircraft con atributos clave como identificador, compañía, origen y hora, y desarrollado funciones para cargar datos desde ficheros, validarlos (por ejemplo, el formato de hora) y representarlos mediante gráficos. Además, hemos implementado visualizaciones como la frecuencia de aterrizajes por hora o por aerolínea, así como la distinción entre vuelos Schengen y no Schengen. También se ha añadido la generación de trayectorias en formato KML y el cálculo de distancias con la fórmula de Haversine , lo que permite identificar vuelos de larga distancia. Finalmente, para la realización de ciertas funciones clave como cambio de radianes con la finalidad de aplicar Haversine tuvimos en cuenta uno de los ejercicios iniciales introductorios al proyecto. 
+
+Por último, una vez tuvimos acabada la interfaz preliminar al disponernos a hacer el video nos percatamos de un error a la hora de cargar la gráficas varias relacionado econ el apartado de pixeles. Por lo tanto a la hora de realizar el video solucionamos el error con una función llamada def PlotAp() que adapata la interfaz a la grafica.
   
 link to video 2: https://docs.google.com/videos/d/1cMkvCwagU7mwNASGqBdDtGf4jYHU1lI65GEgi64KV2Q/edit?usp=sharing
 
