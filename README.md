@@ -24,6 +24,9 @@ Por último, una vez tuvimos acabada la interfaz preliminar al disponernos a hac
 link to video 2: https://docs.google.com/videos/d/1cMkvCwagU7mwNASGqBdDtGf4jYHU1lI65GEgi64KV2Q/edit?usp=sharing
 
 VERSION 3
+
+En primer lugar, comenzamos repartiendo y gestionando la prioridad de cada parte de la versión 3. Comentamos en grupo como atacar las diversas funciones de la vers. 3 sobre el conjunto total de la ya desarrollada interfaz gráfica. Finalmente, para acabar la planificación nos centramos en como gestionarnos de cara a las dos semanas restantes hasta la entregapara acabar a tiempo e incluso bastante antes.
+
 link to video 3:
 VERSION 4
 link to video 4:
