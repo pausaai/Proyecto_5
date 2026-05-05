@@ -132,7 +132,15 @@ Button(frame2, text="Remove Airport", command=Remove, bg="#d4664b", fg="white", 
 frame3 = LabelFrame(root, text="Figure Visualizer", font=FONT_TITLE)
 frame3.configure(bg='#f5e8c3', fg="#ff5c3b")
 frame3.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
-frame3.rowconfigure(0, weight=1)
+frame3.rowconfigure(1, weight=1)
 frame3.columnconfigure(0, weight=1)
+    #Añadimos la función para ajustar las grafica a la interfaz
+def PlotAp():
+    for widget in frame3.winfo_children():
+        widget.destroy()
+    canvas = FigureCanvasTkAgg(PlotAirports(LoadAirports()), master=frame3)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+
 Label(frame3, text="Press any 'Plot' button to display", bg="#f5e8c3", fg="#ff5c3b", font=FONT).grid(row=0, column=0)
 root.mainloop()
