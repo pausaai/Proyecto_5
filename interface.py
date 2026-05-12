@@ -28,31 +28,39 @@ FONT_B = ("Segoe UI", 10, "bold")
 FONT_TITLE = ("Segoe UI", 11, "bold")
 
 def PlotAp():
+    # Carga los aeropuertos y muestra el gráfico de aeropuertos en el frame de visualización.
     canvas = FigureCanvasTkAgg(PlotAirports(LoadAirports()), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def PlotAl():
+    # Carga las llegadas y muestra el gráfico de aerolíneas en el frame de visualización.
     canvas = FigureCanvasTkAgg(PlotAirlines(LoadArrivals()), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def PlotArrRate():
+    # Carga las llegadas y muestra el gráfico de frecuencia de aterrizajes por hora en el frame de visualización.
     canvas = FigureCanvasTkAgg(PlotArrivals(LoadArrivals()), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def PlotFlTy():
+    # Carga las llegadas y muestra el gráfico comparando vuelos Schengen y no Schengen en el frame de visualización.
     canvas = FigureCanvasTkAgg(PlotFlightsType(LoadArrivals()), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def MapAp():
+    # Genera el fichero KML de aeropuertos y lo abre automáticamente en el sistema.
     MapAirports(LoadAirports())
     os.system("Start Airports.kml")
 def MapFl():
+    # Genera el fichero KML con todas las trayectorias de vuelos y lo abre automáticamente.
     MapFlights(LoadArrivals())
     os.system("Start Flights.kml")
 def MapFlLong():
+    # Genera el fichero KML solo con vuelos de larga distancia (>2000 km) y lo abre automáticamente.
     MapFlights(LongDistanceArrivals(LoadArrivals()))
     os.system("Start Flights.kml")
 def Save():
+    # Recoge los datos del formulario, crea un aeropuerto y lo guarda en el fichero solo si es Schengen. Muestra mensajes de error o éxito.
     try:
         if (latitude.get() == "") or (longitude.get() == ""):
             messagebox.showerror("Error", "Check coordinates")
@@ -74,6 +82,7 @@ def Save():
         messagebox.showerror("Error", "No Airports found.\n Please input a valid Airport")
         return
 def Add():
+    # Recoge los datos del formulario, crea un aeropuerto y lo añade al fichero independientemente de si es Schengen. Muestra mensajes de error o éxito.
     try:
         if (latitude.get() == "") or (longitude.get() == ""):
             messagebox.showerror("Error", "Check coordinates")
@@ -100,6 +109,7 @@ def Add():
         return
 
 def Remove():
+    # Recoge el código ICAO del formulario y elimina el aeropuerto correspondiente del fichero. Muestra un mensaje de éxito.
     if icao.get() == "":
         messagebox.showerror("Error", "Check code")
         return
