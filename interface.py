@@ -15,7 +15,7 @@ except FileNotFoundError:
 
 root = Tk()
 root.title("Airport Management")
-root.configure(bg='#f5e8c3', padx=15, pady=15)
+root.configure(bg='#2a2a3d', padx=15, pady=15)
 root.rowconfigure(0, weight=1)
 root.rowconfigure(1, weight=1)
 root.rowconfigure(2, weight=2)
@@ -23,9 +23,9 @@ root.rowconfigure(3, weight=1)
 root.columnconfigure(0, weight=1)
 root.columnconfigure(1, weight=1)
 
-FONT = ("Helvetica", 10)
-FONT_B = ("Helvetica", 10, "bold")
-FONT_TITLE = ("Helvetica", 11, "bold")
+FONT = ("Segoe UI", 10)
+FONT_B = ("Segoe UI", 10, "bold")
+FONT_TITLE = ("Segoe UI", 11, "bold")
 
 def PlotAp():
     canvas = FigureCanvasTkAgg(PlotAirports(LoadAirports()), master=frame3)
@@ -54,6 +54,9 @@ def MapFlLong():
     os.system("Start Flights.kml")
 def Save():
     try:
+        if (latitude.get() == "") or (longitude.get() == ""):
+            messagebox.showerror("Error", "Check coordinates")
+            return
         a = Airport()
         a.icao = icao.get()
         a.latitude = ConvertCoordinates(latitude.get())
@@ -61,10 +64,10 @@ def Save():
         SetSchengen(a)
         result = SaveSchengenAirports(a)
         if result == True:
-            messagebox.showinfo("Error", "Airport Already on the List")
+            messagebox.showerror("Error", "Airport Already on the List")
             return
         elif result == False:
-            messagebox.showinfo("Error", "Check Airport Format")
+            messagebox.showerror("Error", "Check Airport Format")
         else:
             messagebox.showinfo("Success", "Airport Added Successfully")
     except ValueError:
@@ -72,20 +75,23 @@ def Save():
         return
 def Add():
     try:
+        if (latitude.get() == "") or (longitude.get() == ""):
+            messagebox.showerror("Error", "Check coordinates")
+            return
         a = Airport()
         a.icao = icao.get()
         a.latitude = ConvertCoordinates(latitude.get())
         a.longitude = ConvertCoordinates(longitude.get())
-        if (a.latitude == None) or (a.longitude == None):
+        if (a.latitude == "") or (a.longitude == ""):
             messagebox.showerror("Error", "Check coordinates")
             return
         SetSchengen(a)
         result = AddAirport(a)
         if result == True:
-            messagebox.showinfo("Error", "Airport Already on the List")
+            messagebox.showerror("Error", "Airport Already on the List")
             return
         elif result == False:
-            messagebox.showinfo("Error", "Check Airport Format")
+            messagebox.showerror("Error", "Check Airport Format")
             return
         else:
             messagebox.showinfo("Success", "Airport Added Successfully")
@@ -94,53 +100,49 @@ def Add():
         return
 
 def Remove():
+    if icao.get() == "":
+        messagebox.showerror("Error", "Check code")
+        return
     airport = icao.get()
     RemoveAirport(LoadAirports(), airport)
+    messagebox.showinfo("Success", "Airport Removed Successfully")
 
-Label(root, text="Airport Management", bg='#f5e8c3', fg='#ff5c3b', font=("Helvetica", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
+Label(root, text="Airport Management", bg='#2a2a3d', fg='#c084fc', font=("Segoe UI", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
 
 frame1 = LabelFrame(root, text="Existing File Operations", font=FONT_TITLE)
-frame1.configure(bg='#f5e8c3', fg="#ff5c3b")
+frame1.configure(bg='#2a2a3d', fg="#c084fc")
 frame1.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 frame1.columnconfigure(0, weight=1)
-Button(frame1, text="Plot Airports", command=PlotAp, bg='#d4664b', fg="white", font=FONT_B).grid(row=3, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Plot Arrivals by type", command=PlotFlTy, bg='#d4664b', fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Plot Airlines", command=PlotAl, bg='#d4664b', fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Plot Arrivals", command=PlotArrRate, bg='#d4664b', fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Airports", command=MapAp,  bg='#d4664b', fg="white", font=FONT_B).grid(row=7, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Arrivals", command=MapFl, bg='#d4664b', fg="white", font=FONT_B).grid(row=8, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Long Distance Arrivals", command=MapFlLong, bg='#d4664b', fg="white", font=FONT_B).grid(row=9, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Airports", command=PlotAp, bg='#7c3aed', fg="white", font=FONT_B).grid(row=3, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Arrivals by type", command=PlotFlTy, bg='#7c3aed', fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Airlines", command=PlotAl, bg='#7c3aed', fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Plot Arrivals", command=PlotArrRate, bg='#7c3aed', fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Map Airports", command=MapAp,  bg='#7c3aed', fg="white", font=FONT_B).grid(row=7, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Map Arrivals", command=MapFl, bg='#7c3aed', fg="white", font=FONT_B).grid(row=8, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame1, text="Map Long Distance Arrivals", command=MapFlLong, bg='#7c3aed', fg="white", font=FONT_B).grid(row=9, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
 
 frame2 = LabelFrame(root, text="Add / Save / Remove:", font=FONT_TITLE)
-frame2.configure(bg='#f5e8c3', fg="#ff5c3b")
+frame2.configure(bg='#2a2a3d', fg="#c084fc")
 frame2.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
 frame2.columnconfigure(0, weight=1)
-Label(frame2, text="Enter Airport:", bg="#f5e8c3", fg="#ff5c3b", font=FONT_B).grid(row=0, column=0, columnspan= 2)
-Label(frame2, text="ICAO code: (e.g. 'LEBL')", bg="#f5e8c3", fg="#ff5c3b", font=FONT).grid(row=1, column=0)
-icao = Entry(frame2, width=40, font=FONT, bg='#e7ceb1')
+Label(frame2, text="Enter Airport:", bg="#2a2a3d", fg="#c084fc", font=FONT_B).grid(row=0, column=0, columnspan= 2)
+Label(frame2, text="ICAO code: (e.g. 'LEBL')", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=1, column=0)
+icao = Entry(frame2, width=40, font=FONT, bg='#c084fc')
 icao.grid(row=1, column=1, padx=5, pady=5)
-Label(frame2, text="Latitude: (e.g. 'N411749')", bg="#f5e8c3", fg="#ff5c3b", font=FONT).grid(row=2, column=0)
-latitude = Entry(frame2, width = 40, font=FONT, bg='#e7ceb1')
+Label(frame2, text="Latitude: (e.g. 'N411749')", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=2, column=0)
+latitude = Entry(frame2, width = 40, font=FONT, bg='#c084fc')
 latitude.grid(row=2, column=1, padx=5, pady=5)
-Label(frame2, text="Longitude: (e.g. 'E0020442')", bg="#f5e8c3", fg="#ff5c3b", font=FONT).grid(row=3, column=0)
-longitude = Entry(frame2, width=40, font=FONT, bg='#e7ceb1')
+Label(frame2, text="Longitude: (e.g. 'E0020442')", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=3, column=0)
+longitude = Entry(frame2, width=40, font=FONT, bg='#c084fc')
 longitude.grid(row=3, column=1, padx=5, pady=5)
-Button(frame2, text="Save Schengen Airports Only", command=Save, bg="#d4664b", fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame2, text="Add Airport list to File", command=Add,  bg="#d4664b", fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame2, text="Remove Airport", command=Remove, bg="#d4664b", fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame2, text="Save Schengen Airports Only", command=Save, bg="#7c3aed", fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame2, text="Add Airport list to File", command=Add,  bg="#7c3aed", fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame2, text="Remove Airport", command=Remove, bg="#7c3aed", fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
 
 frame3 = LabelFrame(root, text="Figure Visualizer", font=FONT_TITLE)
-frame3.configure(bg='#f5e8c3', fg="#ff5c3b")
+frame3.configure(bg='#2a2a3d', fg="#c084fc")
 frame3.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
-frame3.rowconfigure(1, weight=1)
+frame3.rowconfigure(0, weight=1)
 frame3.columnconfigure(0, weight=1)
-    #Añadimos la función para ajustar las grafica a la interfaz
-def PlotAp():
-    for widget in frame3.winfo_children():
-        widget.destroy()
-    canvas = FigureCanvasTkAgg(PlotAirports(LoadAirports()), master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
-
-Label(frame3, text="Press any 'Plot' button to display", bg="#f5e8c3", fg="#ff5c3b", font=FONT).grid(row=0, column=0)
+Label(frame3, text="Press any 'Plot' button to display", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=0, column=0)
 root.mainloop()
