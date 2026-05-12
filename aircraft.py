@@ -7,8 +7,11 @@ class Aircraft:
         self.company = ""
         self.origin = ""
         self.time = "00:00"
+# Clase que representa un avión con sus atributos: id, aerolínea, origen y hora de llegada.
 
 def GoodTimeFormat(time):
+    # Parámetros: time (str) -> cadena con la hora a validar
+    # Descripción: Valida que una cadena tenga formato de hora correcto (HH:MM). Devuelve True o False.
     try:
         if time == '':
             return False
@@ -32,6 +35,8 @@ def GoodTimeFormat(time):
         return False
 
 def LoadArrivals():
+    # Parámetros: ninguno
+    # Descripción: Lee el fichero Arrivals.txt y devuelve una lista de objetos Aircraft con los datos de cada vuelo.
     arrivals = []
     try:
         f = open('Arrivals.txt', 'r')
@@ -53,6 +58,8 @@ def LoadArrivals():
         return []
 
 def PlotArrivals(aircrafts):
+    # Parámetros: aircrafts (list) -> lista de objetos Aircraft
+    # Descripción: Genera un gráfico de barras con el número de aterrizajes por hora del día.
     if len(aircrafts) == 0:
         print('List is empty')
         return
@@ -70,6 +77,8 @@ def PlotArrivals(aircrafts):
     return fig
 
 def SaveFlights(aircrafts):
+    # Parámetros: aircrafts (list) -> lista de objetos Aircraft
+    # Descripción: Guarda la lista de vuelos en el fichero Arrivals.txt, usando '-' para los campos vacíos.
     if len(aircrafts) == 0:
         print('List or File is empty')
     f = open(f'Arrivals.txt', 'w')
@@ -97,6 +106,8 @@ def SaveFlights(aircrafts):
     f.close()
 
 def PlotAirlines(aircrafts):
+    # Parámetros:aircrafts (list) -> lista de objetos de aircraft
+    # Descripción: Genera un gráfico de barras con el número de vuelos llegados por cada aeroliea
     if len(aircrafts) == 0:
         print('List is empty')
         return
@@ -124,6 +135,8 @@ def PlotAirlines(aircrafts):
     return fig
 
 def PlotFlightsType(aircrafts):
+    # Parámetros: aircrafts (list) -> lista de objetos Aircraft
+    # Descripción: Genera un gráfico comparando cuántos vuelos provienen de la zona Schengen y cuántos de fuera.
     if len(aircrafts) == 0:
         print('List is empty')
         return
@@ -146,9 +159,14 @@ def PlotFlightsType(aircrafts):
     return fig
 
 def DegreesToRadians(degrees):  #Había otra funcion que ya donde ya se tenia los vuelos en grados?
+    # Parámetros: degrees (float) -> ángulo en grados
+    # Descripción: Convierte un ángulo de grados a radianes.
     return degrees * (math.pi / 180)
 
 def HaversineDistance(lat1, lon1, lat2 , lon2):
+    # Parámetros: lat1, lon1 (float) -> coordenadas del punto de origen
+    #             lat2, lon2 (float) -> coordenadas del punto de destino
+    # Descripción: Calcula la distancia en km entre dos coordenadas geográficas usando la fórmula de Haversine.
     RadioTierra=6371.0 #KM
 
     rlat1= DegreesToRadians(lat1)
@@ -167,6 +185,9 @@ def HaversineDistance(lat1, lon1, lat2 , lon2):
     return distance
 
 def FindAirports(airports, code):
+    # Parámetros: airports (list) -> lista de objetos aeropuerto
+    #             code (str) -> código ICAO a buscar
+    # Descripción: Busca y devuelve un aeropuerto de la lista por su código ICAO, o None si no existe.
     i=0
     while i < len(airports):
         if airports[i].icao == code:
@@ -175,6 +196,9 @@ def FindAirports(airports, code):
     return None
 
 def MapFlights(aircrafts):
+    # Parámetros: aircrafts (list) -> lista de objetos Aircraft
+    # Descripción: Genera un fichero KML con las trayectorias de cada vuelo desde su origen hasta Barcelona,
+    #              coloreadas en azul si son Schengen y en rojo si no lo son.
     if len(aircrafts) == 0:
         print('List is empty')
         return
@@ -224,6 +248,8 @@ def MapFlights(aircrafts):
     print('Flights.kml generated with ' + str(len(aircrafts)) + ' trajectories.')
 
 def LongDistanceArrivals(aircrafts):
+    # Parámetros: aircrafts (list) -> lista de objetos Aircraft
+    # Descripción: Filtra y devuelve solo los vuelos cuyo aeropuerto de origen está a más de 2000 km de Barcelona.
     if len(aircrafts) == 0:
         print('List is empty')
         return
@@ -245,3 +271,4 @@ def LongDistanceArrivals(aircrafts):
                 mayorlimite.append(aircrafts[i])
         i+= 1
     return mayorlimite
+
