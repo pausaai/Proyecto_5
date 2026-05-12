@@ -132,6 +132,7 @@ def PlotAirlines(aircrafts):
     ax.set_title('Airline Flights')
     ax.set_xlabel('Airlines')
     ax.set_ylabel('Number of arriving aircraft')
+    ax.tick_params(axis='x', rotation=90)
     return fig
 
 def PlotFlightsType(aircrafts):
