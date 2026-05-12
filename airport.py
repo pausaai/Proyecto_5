@@ -6,8 +6,11 @@ class Airport:
         self.latitude = 0.0
         self.longitude = 0.0
         self.schengen = False
+# Clase que representa un aeropuerto con sus atributos: código ICAO, latitud, longitud y si es Schengen.
 
 def IsSchengenAirport(code):
+    # Parámetros: code (str) -> código ICAO del aeropuerto
+    # Descripción: Comprueba si un aeropuerto pertenece a la zona Schengen según los dos primeros caracteres de su código ICAO.
     if code == '' or len(code) != 4:
         return False
     zone = code[0] + code[1]
@@ -21,6 +24,8 @@ def IsSchengenAirport(code):
     return found
 
 def ConvertCoordinates(coord):
+    # Parámetros: coord (str) -> coordenada en formato DMS (ej: N412945)
+    # Descripción: Convierte una coordenada en formato DMS (grados, minutos, segundos) a formato decimal. Devuelve False si el formato es inválido.
     try:
         direction = coord [0]
         if direction == 'N' or direction == 'S':
@@ -40,6 +45,9 @@ def ConvertCoordinates(coord):
         return False
 
 def ReturnCoordinates(decimal, islat):
+    # Parámetros: decimal (float) -> coordenada en formato decimal
+    #             islat (bool) -> True si es latitud, False si es longitud
+    # Descripción: Convierte una coordenada decimal a formato DMS con dirección (N/S/E/W).
     if islat:
         if decimal >= 0:
             direction = "N"
@@ -77,9 +85,13 @@ def ReturnCoordinates(decimal, islat):
     return direction + degfin + minsfin + secfin
 
 def SetSchengen(airport):
+    # Parámetros: airport (Airport) -> objeto aeropuerto
+    # Descripción: Actualiza el atributo schengen del aeropuerto según su código ICAO.
     airport.schengen = IsSchengenAirport(airport.icao)
 
 def PrintAirport(airport):
+    # Parámetros: airport (Airport) -> objeto aeropuerto a mostrar
+    # Descripción: Imprime por pantalla los datos del aeropuerto. Muestra un error si el objeto no es válido.
     try:
         print("ICAO:", airport.icao)
         print("Latitude:", airport.latitude)
@@ -89,6 +101,8 @@ def PrintAirport(airport):
         print("Error, invalid airport.")
 
 def LoadAirports():
+    # Parámetros: ninguno
+    # Descripción: Lee el fichero Airports.txt y devuelve una lista de objetos Airport con todos los aeropuertos.
         f = open('Airports.txt', 'r')
         f.readline()
         airports = []
@@ -107,6 +121,8 @@ def LoadAirports():
         return airports
 
 def SaveSchengenAirports(airport):
+    # Parámetros: airport (Airport) -> objeto aeropuerto a guardar
+    # Descripción: Añade un aeropuerto al fichero Airports.txt solo si es Schengen y pasa todas las validaciones. Avisa si ya existe.
     if airport is None:
         print('Input a valid airport.')
         return False
@@ -156,6 +172,8 @@ def SaveSchengenAirports(airport):
         print('Airport added to the list.')
 
 def AddAirport(airport):
+    # Parámetros: airport (Airport) -> objeto aeropuerto a añadir
+    # Descripción: Añade cualquier aeropuerto válido al fichero Airports.txt tras validar su código ICAO y coordenadas. Avisa si ya existe.
     if airport is None:
         print('Input a valid airport.')
         return False
@@ -201,6 +219,9 @@ def AddAirport(airport):
         print('Airport added to the list.')
 
 def RemoveAirport(airports, code):
+    # Parámetros: airports (list) -> lista de objetos Airport
+    #             code (str) -> código ICAO del aeropuerto a eliminar
+    # Descripción: Elimina un aeropuerto de la lista y actualiza el fichero Airports.txt. Avisa si el código no existe.
     if len(airports) == 0:
         print('List is empty')
         return []
@@ -230,6 +251,8 @@ def RemoveAirport(airports, code):
         f.close()
 
 def PlotAirports(airports):
+    # Parámetros: airports (list) -> lista de objetos Airport
+    # Descripción: Genera un gráfico de barras comparando el número de aeropuertos Schengen y no Schengen.
     if len(airports) == 0:
         print('No airports found.')
         return
@@ -250,6 +273,8 @@ def PlotAirports(airports):
     return fig
 
 def MapAirports(airports):
+    # Parámetros: airports (list) -> lista de objetos Airport
+    # Descripción: Genera un fichero KML con la posición de cada aeropuerto, coloreados en rojo si son Schengen y en azul si no lo son.
     if len(airports) == 0:
         print('No airports found.')
         return
@@ -271,3 +296,4 @@ def MapAirports(airports):
     kml.write('</Document>\n')
     kml.write('</kml>\n')
     kml.close()
+
