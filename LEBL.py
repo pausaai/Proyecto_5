@@ -141,3 +141,43 @@ def GateOccupancy(bcn):
         print(occupancy[i])
         i = i + 1
     return occupancy
+
+def IsAirlineInTerminal (terminal , name ):
+    #Verifica que la terminal contiene el nombre además de proteger nombres fallidos
+    if len(terminal)==0 or not terminal:
+        print('Please enter a valid terminal')
+        return False
+    if len(name)==0 or not name:
+        print('Please enter a name')
+        return False
+    for i in range(len(terminal)):
+        if terminal[i].code == name:
+            return True
+    return False
+
+def SearchTerminal (bcn , name):
+    i=0
+    #Devuelve el nombre de la terminal que contiene el nombre de la aerolinia en la lista de aerolinias
+    while i<len(bcn.terminals):
+        result= IsAirlineInTerminal(bcn.terminals[i],name)
+        if result == True:
+            return bcn.terminals[i]
+        i+=1
+    return
+
+def AssignGate (bcn , aircraft ):
+    #Asignamos una puerta dependiendo de la terminal adecuada para cada aerolinia segun los .txt
+    terminal_name = SearchTerminal(bcn, aircraft.company)
+    if terminal_name == "":
+        print('AIRLINE not found in any terminal')
+        return False
+    terminal=None
+    i=0
+    while i<len(bcn.terminals):
+        if bcn.terminals[i].name==terminal_name:
+            terminal = bcn.terminals[i]
+            break
+        i+=1
+    if terminal is None:
+        return False
+aircraft = BoardingArea()
