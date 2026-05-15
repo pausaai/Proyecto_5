@@ -180,7 +180,7 @@ frame3.rowconfigure(0, weight=1)
 frame3.columnconfigure(0, weight=1)
 Label(frame3, text="Press any 'Plot' button to display", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=0, column=0)
 
-frame4 = LabelFrame(root, text="LEBL.txt Airport Operations", font=FONT_TITLE)
+frame4 = LabelFrame(root, text="Airport Operations", font=FONT_TITLE)
 frame4.configure(bg='#2a2a3d', fg="#c084fc")
 frame4.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
 frame4.columnconfigure(0, weight=1)
