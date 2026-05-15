@@ -111,9 +111,9 @@ def Remove():
 
 def LoadAP():
     global bcn
-    result = LoadAirportStructure("LEBL.txt.txt")
+    result = LoadAirportStructure("LEBL.txt")
     if result == -1:
-        messagebox.showerror("Error", "LEBL.txt.txt not found")
+        messagebox.showerror("Error", "LEBL.txt not found")
         return
     bcn = result
     messagebox.showinfo("Success", "Airport structure loaded successfully")
