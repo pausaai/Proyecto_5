@@ -123,7 +123,7 @@ def ShowOccupancy():
         messagebox.showerror("Error", "Load airport structure first")
         return
     occupancy = GateOccupancy(bcn)
-    canvas = FigureCanvasTkAgg(PlotGateOccupancy(occupancy), master=frame3)
+    canvas = FigureCanvasTkAgg(GateOccupancy(occupancy), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def SearchAirline():
