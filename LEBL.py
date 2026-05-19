@@ -180,8 +180,8 @@ def AssignGate (bcn , aircraft ):
         i+=1
     if terminal is None:
         return False
-aircraft = BoardingArea()
-flight_schengen = IsSchengenAirport(aircraft.gates)
+    aircraft = BoardingArea()
+    flight_schengen = IsSchengenAirport(aircraft.gates)
     for area in terminal.areas:
         if area.type != flight_schengen:
             continue
