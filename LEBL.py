@@ -161,9 +161,9 @@ def SearchTerminal (bcn , name):
     while i<len(bcn.terminals):
         result= IsAirlineInTerminal(bcn.terminals[i],name)
         if result == True:
-            return bcn.terminals[i]
+            return bcn.terminals[i].name
         i+=1
-    return
+    return ""
 
 def AssignGate (bcn , aircraft ):
     #Asignamos una puerta dependiendo de la terminal adecuada para cada aerolinia segun los .txt
@@ -181,3 +181,13 @@ def AssignGate (bcn , aircraft ):
     if terminal is None:
         return False
 aircraft = BoardingArea()
+flight_schengen = IsSchengenAirport(aircraft.gates)
+    for area in terminal.areas:
+        if area.type != flight_schengen:
+            continue
+        for gate in area.gates:
+            if gate.free:
+                gate.free = False
+                gate.ID = aircraft.id
+                return 0
+    return -1
