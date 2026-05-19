@@ -29,6 +29,8 @@ VERSION 3
 
 En primer lugar, comenzamos repartiendo y gestionando la prioridad de cada parte de la versión 3. Comentamos en grupo como atacar las diversas funciones de la vers. 3 sobre el conjunto total de la ya desarrollada interfaz gráfica. Finalmente, para acabar la planificación nos centramos en como gestionarnos de cara a las dos semanas restantes hasta la entregapara acabar a tiempo e incluso bastante antes.
 
-link to video 3:
+Previamente, nos habíamos organizado las distintas tareas. Al finalizar la versión, hemos implementado la gestión de puertas de embarque del aeropuerto LEBL. Creamos las clases Gate, BoardingArea, Terminal y BarcelonaAP, y desarrollamos funciones para cargar la estructura del aeropuerto desde fichero, asignar puertas a aeronaves según su aerolínea y tipo de vuelo (Schengen o no Schengen), buscar terminales por aerolínea y consultar la ocupación de puertas. Todo integrado en la interfaz gráfica existente que para hacer espacio suficiente para las nuevas funciones incoporadas a la version 3 hemos cmabiado el color para hacerla más visual y hemos simplificado ciertos aspectos como el espacio de gráficas,...
+
+link to video 3:  https://drive.google.com/file/d/13vJa1dv24CRu-8p0fXUxtejOOKqD0dO3/view?usp=sharing
 VERSION 4
 link to video 4:
