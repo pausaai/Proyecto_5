@@ -30,22 +30,24 @@ FONT_TITLE = ("Segoe UI", 11, "bold")
 
 bcn = None
 
+def ShowPlot(fig):
+    for widget in frame3.winfo_children():
+        widget.destroy()
+    canvas = FigureCanvasTkAgg(fig, master=frame3)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+#Asignamos para cada funcion donde se nos muestre una grafica dentro de una funciona que se dedica a ajustar estas funciones dentro del marco disponible
+#esto es para que podamos ver bien toda la grafica problema comentado en la version 2 pero encontramos una solucion aun mejor que es esta
+
+
 def PlotAp():
-    canvas = FigureCanvasTkAgg(PlotAirports(LoadAirports()), master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+    ShowPlot(PlotAirports(LoadAirports()))
 def PlotAl():
-    canvas = FigureCanvasTkAgg(PlotAirlines(LoadArrivals()), master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+    ShowPlot(PlotAirlines(LoadArrivals()))
 def PlotArrRate():
-    canvas = FigureCanvasTkAgg(PlotArrivals(LoadArrivals()), master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+    ShowPlot(PlotArrivals(LoadArrivals()))
 def PlotFlTy():
-    canvas = FigureCanvasTkAgg(PlotFlightsType(LoadArrivals()), master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+    ShowPlot(PlotFlightsType(LoadArrivals()))
 def MapAp():
     MapAirports(LoadAirports())
     os.system("Start Airports.kml")
@@ -111,9 +113,9 @@ def Remove():
 
 def LoadAP():
     global bcn
-    result = LoadAirportStructure("LEBL.txt")
+    result = LoadAirportStructure("Terminals.txt")
     if result == -1:
-        messagebox.showerror("Error", "LEBL.txt not found")
+        messagebox.showerror("Error", "Terminals.txt not found")
         return
     bcn = result
     messagebox.showinfo("Success", "Airport structure loaded successfully")
@@ -123,7 +125,7 @@ def ShowOccupancy():
         messagebox.showerror("Error", "Load airport structure first")
         return
     occupancy = GateOccupancy(bcn)
-    canvas = FigureCanvasTkAgg(GateOccupancy(occupancy), master=frame3)
+    canvas = FigureCanvasTkAgg( GateOccupancy(), master=frame3)
     canvas.draw()
     canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
 def SearchAirline():
@@ -140,6 +142,65 @@ def SearchAirline():
         messagebox.showerror("Not found", name + " not found in any terminal")
     else:
         messagebox.showinfo("Terminal found", name + " boards at terminal " + terminal_name)
+
+def CheckIsAirlineInTerminal():
+    global bcn
+    if bcn == None:
+        messagebox.showerror("Error", "Load airport structure first")
+        return
+    t_name = terminal_entry.get()
+    airline_code = airline_entry.get()
+    terminal_obj = ()
+    i = 0
+    while i < len(bcn.terminals):
+        if bcn.terminals[i].name == t_name:
+            terminal_obj = bcn.terminals[i]
+        i = i + 1
+    if terminal_obj == None:
+        messagebox.showerror("Error", "Terminal not found")
+        return
+    result = IsAirlineInTerminal(terminal_obj , airline_code)
+    if result == True:
+        messagebox.showinfo("Result", airline_code + " IS in terminal " + t_name)
+    else:
+        messagebox.showinfo("Result", airline_code + " is NOT in terminal " + t_name)
+def AssignGateUI():
+    global bcn
+    if bcn == None:
+        messagebox.showerror("Error", "Load airport structure first")
+        return
+    aircraft_id = aircraft_entry.get()
+    if aircraft_id == "":
+        messagebox.showerror("Error", "Enter an aircraft ID")
+        return
+    arrivals = LoadArrivals()
+    target = None
+    i = 0
+    while i < len(arrivals):
+        if arrivals[i].id == aircraft_id:
+            target = arrivals[i]
+        i = i + 1
+    if target == None:
+        messagebox.showerror("Not Found", "Aircraft " + aircraft_id + " not found in Arrivals.txt")
+        return
+    result = AssignGate(bcn, target)
+    if result == -1:
+        messagebox.showerror("Failed", "No free gate available for " + aircraft_id)
+        return
+    gate_name = ""
+    t = 0
+    while t < len(bcn.terminals):
+        a = 0
+        while a < len(bcn.terminals[t].areas):
+            g = 0
+            while g < len(bcn.terminals[t].areas[a].gates):
+                if bcn.terminals[t].areas[a].gates[g].ID == aircraft_id:
+                    gate_name = bcn.terminals[t].areas[a].gates[g].name
+                g = g + 1
+            a = a + 1
+        t = t + 1
+    messagebox.showinfo("Gate Assigned", "Aircraft: " + aircraft_id + "\nAirline: " + target.company + "\nOrigin: " + target.origin + "\nGate: " + gate_name)
+
 
 Label(root, text="Airport Management", bg='#2a2a3d', fg='#c084fc', font=("Segoe UI", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
 
@@ -185,11 +246,20 @@ frame4.configure(bg='#2a2a3d', fg="#c084fc")
 frame4.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
 frame4.columnconfigure(0, weight=1)
 frame4.columnconfigure(1, weight=1)
-Button(frame4, text="Load Airport Structure", command=LoadAP,        bg='#7c3aed', fg="white", font=FONT_B).grid(row=0, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame4, text="Show Gate Occupancy",    command=ShowOccupancy, bg='#7c3aed', fg="white", font=FONT_B).grid(row=1, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Label(frame4,  text="Airline name:",          bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=2, column=0, padx=5, pady=5)
-airline_entry = Entry(frame4, width=20, font=FONT, bg='#c084fc')
-airline_entry.grid(row=2, column=1, padx=5, pady=5)
-Button(frame4, text="Search Terminal",        command=SearchAirline, bg='#7c3aed', fg="white", font=FONT_B).grid(row=3, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame4, text="Load Airport Structure",  command=LoadAP,        bg='#7c3aed', fg="white", font=FONT_B).grid(row=0, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame4, text="Show Gate Occupancy",     command=ShowOccupancy, bg='#7c3aed', fg="white", font=FONT_B).grid(row=1, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Label(frame4, text="Terminal (e.g. T1):",      bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=2, column=0, sticky="w", padx=5)
+terminal_entry = Entry(frame4, width=10, font=FONT, bg='#c084fc')
+terminal_entry.grid(row=2, column=1, padx=5, pady=3, sticky="ew")
+Label(frame4, text="Airline ICAO (e.g. VLG):", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=3, column=0, sticky="w", padx=5)
+airline_entry = Entry(frame4, width=10, font=FONT, bg='#c084fc')
+airline_entry.grid(row=3, column=1, padx=5, pady=3, sticky="ew")
+Button(frame4, text="Is Airline in Terminal?",     command=CheckIsAirlineInTerminal, bg='#7c3aed', fg="white", font=FONT_B).grid(row=4, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(frame4, text="Search Terminal for Airline", command=SearchAirline,            bg='#7c3aed', fg="white", font=FONT_B).grid(row=5, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Label(frame4, text="Aircraft ID (e.g. ECMKV):",   bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=6, column=0, sticky="w", padx=5)
+aircraft_entry = Entry(frame4, width=10, font=FONT, bg='#c084fc')
+aircraft_entry.grid(row=6, column=1, padx=5, pady=3, sticky="ew")
+Button(frame4, text="Assign Gate to Aircraft",     command=AssignGateUI,             bg='#7c3aed', fg="white", font=FONT_B).grid(row=7, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+
 
 root.mainloop()
