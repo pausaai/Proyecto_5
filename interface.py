@@ -3,263 +3,430 @@ import sys
 from tkinter import *
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-#from airport import *
+
 from aircraft import *
 from LEBL import *
 
 try:
-    f = open("Airports.txt", "r")
-    f.close()
+    open("Airports.txt", "r").close()
 except FileNotFoundError:
-    messagebox.showerror("Error", "No Airports file found.\nPlease download Airports.txt")
+    messagebox.showerror("Error", "Airports.txt not found")
     sys.exit(1)
 
 root = Tk()
-root.title("Airport Management")
-root.configure(bg='#2a2a3d', padx=15, pady=15)
-root.rowconfigure(0, weight=1)
-root.rowconfigure(1, weight=1)
-root.rowconfigure(2, weight=2)
-root.rowconfigure(3, weight=1)
-root.columnconfigure(0, weight=1)
-root.columnconfigure(1, weight=1)
+root.title("Airport Management System")
+root.geometry("1450x850")
+root.configure(bg="#2a2a3d")
 
-FONT = ("Segoe UI", 10)
-FONT_B = ("Segoe UI", 10, "bold")
-FONT_TITLE = ("Segoe UI", 11, "bold")
+root.rowconfigure(0, weight=1)
+root.columnconfigure(0, weight=1)
+root.columnconfigure(1, weight=5)
+
+FONT_B = ("Segoe UI", 9, "bold")
 
 bcn = None
 
-def ShowPlot(fig):
-    for widget in frame3.winfo_children():
-        widget.destroy()
-    canvas = FigureCanvasTkAgg(fig, master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-#Asignamos para cada funcion donde se nos muestre una grafica dentro de una funciona que se dedica a ajustar estas funciones dentro del marco disponible
-#esto es para que podamos ver bien toda la grafica problema comentado en la version 2 pero encontramos una solucion aun mejor que es esta
 
+def ShowPlot(fig, show_filter=False):
+
+    for w in frame3.winfo_children():
+        w.destroy()
+
+    frame3.rowconfigure(0, weight=1)
+
+    if show_filter:
+
+        frame3.columnconfigure(0, weight=4)
+        frame3.columnconfigure(1, weight=1)
+
+        graph_frame = Frame(frame3, bg="#2a2a3d")
+        graph_frame.grid(row=0, column=0, sticky="nsew")
+
+        filter_frame = Frame(frame3, bg="#222233", width=250)
+        filter_frame.grid(row=0, column=1, sticky="ns")
+
+        BuildAirlineFilter(filter_frame)
+
+        canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    else:
+
+        frame3.columnconfigure(0, weight=1)
+
+        canvas = FigureCanvasTkAgg(fig, master=frame3)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+
+selected_airlines = []
+all_airlines = []
+airline_filter_panel = None
+airline_listbox = None
+airline_selected_box = None
+airline_search_var = None
+
+def OpenAirlineSelector():
+    global all_airlines
+
+    data = LoadArrivals()
+    all_airlines = sorted(list(set([d.company for d in data])))
+
+    win = Toplevel(root)
+    win.title("Airline Filter")
+    win.geometry("420x520")
+    win.configure(bg="#2a2a3d")
+
+    Label(win, text="Search airline:", bg="#2a2a3d", fg="white").pack(pady=5)
+
+    search_var = StringVar()
+    Entry(win, textvariable=search_var, width=35).pack()
+
+    listbox = Listbox(win, height=10, width=40)
+    listbox.pack(pady=5)
+
+    Label(win, text="Selected airlines:", bg="#2a2a3d", fg="#c084fc").pack()
+
+    selected_box = Listbox(win, height=6, width=40)
+    selected_box.pack(pady=5)
+
+    def refresh_available():
+        listbox.delete(0, END)
+        q = search_var.get().lower()
+
+        for a in all_airlines:
+            if q in a.lower():
+                listbox.insert(END, a)
+
+    def refresh_selected():
+        selected_box.delete(0, END)
+        for s in selected_airlines:
+            selected_box.insert(END, s)
+
+    def add():
+        try:
+            val = listbox.get(listbox.curselection())
+            if val not in selected_airlines:
+                selected_airlines.append(val)
+                refresh_selected()
+        except:
+            messagebox.showerror("Error", "Select airline")
+
+    def remove():
+        try:
+            val = selected_box.get(selected_box.curselection())
+            selected_airlines.remove(val)
+            refresh_selected()
+        except:
+            messagebox.showerror("Error", "Select selected airline")
+
+    def clear():
+        selected_airlines.clear()
+        refresh_selected()
+
+    def apply():
+        win.destroy()
+        PlotAl()
+
+    search_var.trace("w", lambda *args: refresh_available())
+    refresh_available()
+    refresh_selected()
+
+    Button(win, text="Add →", command=add, width=20).pack(pady=2)
+    Button(win, text="← Remove", command=remove, width=20).pack(pady=2)
+    Button(win, text="Clear", command=clear, width=20).pack(pady=2)
+    Button(win, text="Apply Filter", command=apply, width=25, bg="#7c3aed", fg="white").pack(pady=10)
 
 def PlotAp():
     ShowPlot(PlotAirports(LoadAirports()))
-def PlotAl():
-    ShowPlot(PlotAirlines(LoadArrivals()))
+
 def PlotArrRate():
     ShowPlot(PlotArrivals(LoadArrivals()))
+
 def PlotFlTy():
     ShowPlot(PlotFlightsType(LoadArrivals()))
+
+def PlotAl():
+
+    data = LoadArrivals()
+
+    if len(selected_airlines) == 0:
+        filtered = data
+    else:
+        filtered = [
+            d for d in data
+            if d.company in selected_airlines
+        ]
+
+    ShowPlot(
+        PlotAirlines(filtered),
+        show_filter=True
+    )
+
 def MapAp():
     MapAirports(LoadAirports())
-    os.system("Start Airports.kml")
+    os.system("start Airports.kml")
+
 def MapFl():
     MapFlights(LoadArrivals())
-    os.system("Start Flights.kml")
+    os.system("start Flights.kml")
+
 def MapFlLong():
     MapFlights(LongDistanceArrivals(LoadArrivals()))
-    os.system("Start Flights.kml")
+    os.system("start Flights.kml")
+
 def Save():
-    try:
-        if (latitude.get() == "") or (longitude.get() == ""):
-            messagebox.showerror("Error", "Check coordinates")
-            return
-        a = Airport()
-        a.icao = icao.get()
-        a.latitude = ConvertCoordinates(latitude.get())
-        a.longitude = ConvertCoordinates(longitude.get())
-        SetSchengen(a)
-        result = SaveSchengenAirports(a)
-        if result == True:
-            messagebox.showerror("Error", "Airport Already on the List")
-            return
-        elif result == False:
-            messagebox.showerror("Error", "Check Airport Format")
-        else:
-            messagebox.showinfo("Success", "Airport Added Successfully")
-    except ValueError:
-        messagebox.showerror("Error", "No Airports found.\n Please input a valid Airport")
+    if latitude.get() == "" or longitude.get() == "":
+        messagebox.showerror("Error", "Check coordinates")
         return
+
+    a = Airport()
+    a.icao = icao.get()
+    a.latitude = ConvertCoordinates(latitude.get())
+    a.longitude = ConvertCoordinates(longitude.get())
+
+    SetSchengen(a)
+    SaveSchengenAirports(a)
+
 def Add():
-    try:
-        if (latitude.get() == "") or (longitude.get() == ""):
-            messagebox.showerror("Error", "Check coordinates")
-            return
-        a = Airport()
-        a.icao = icao.get()
-        a.latitude = ConvertCoordinates(latitude.get())
-        a.longitude = ConvertCoordinates(longitude.get())
-        if (a.latitude == "") or (a.longitude == ""):
-            messagebox.showerror("Error", "Check coordinates")
-            return
-        SetSchengen(a)
-        result = AddAirport(a)
-        if result == True:
-            messagebox.showerror("Error", "Airport Already on the List")
-            return
-        elif result == False:
-            messagebox.showerror("Error", "Check Airport Format")
-            return
-        else:
-            messagebox.showinfo("Success", "Airport Added Successfully")
-    except ValueError:
-        messagebox.showerror("Error", "No Airports found.\n Please input a valid Airport")
-        return
+    a = Airport()
+    a.icao = icao.get()
+    a.latitude = ConvertCoordinates(latitude.get())
+    a.longitude = ConvertCoordinates(longitude.get())
+
+    SetSchengen(a)
+    AddAirport(a)
+
 def Remove():
-    if icao.get() == "":
-        messagebox.showerror("Error", "Check code")
-        return
-    airport = icao.get()
-    RemoveAirport(LoadAirports(), airport)
-    messagebox.showinfo("Success", "Airport Removed Successfully")
+    RemoveAirport(LoadAirports(), icao.get())
 
 def LoadAP():
     global bcn
-    result = LoadAirportStructure("Terminals.txt")
-    if result == -1:
-        messagebox.showerror("Error", "Terminals.txt not found")
-        return
-    bcn = result
-    messagebox.showinfo("Success", "Airport structure loaded successfully")
+    bcn = LoadAirportStructure("Terminals.txt")
+
 def ShowOccupancy():
-    global bcn
-    if bcn == None:
-        messagebox.showerror("Error", "Load airport structure first")
-        return
-    occupancy = GateOccupancy(bcn)
-    canvas = FigureCanvasTkAgg( GateOccupancy(), master=frame3)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+    if bcn:
+        ShowPlot(GateOccupancy(bcn))
+
 def SearchAirline():
-    global bcn
-    if bcn == None:
-        messagebox.showerror("Error", "Load airport structure first")
-        return
-    name = airline_entry.get()
-    if name == "":
-        messagebox.showerror("Error", "Enter an airline name")
-        return
-    terminal_name = SearchTerminal(bcn, name)
-    if terminal_name == "":
-        messagebox.showerror("Not found", name + " not found in any terminal")
-    else:
-        messagebox.showinfo("Terminal found", name + " boards at terminal " + terminal_name)
+    if bcn:
+        res = SearchTerminal(bcn, airline_entry.get())
+        messagebox.showinfo("Result", res)
 
 def CheckIsAirlineInTerminal():
-    global bcn
-    if bcn == None:
-        messagebox.showerror("Error", "Load airport structure first")
+    if not bcn:
         return
+
     t_name = terminal_entry.get()
-    airline_code = airline_entry.get()
-    terminal_obj = ()
-    i = 0
-    while i < len(bcn.terminals):
-        if bcn.terminals[i].name == t_name:
-            terminal_obj = bcn.terminals[i]
-        i = i + 1
-    if terminal_obj == None:
-        messagebox.showerror("Error", "Terminal not found")
-        return
-    result = IsAirlineInTerminal(terminal_obj , airline_code)
-    if result == True:
-        messagebox.showinfo("Result", airline_code + " IS in terminal " + t_name)
-    else:
-        messagebox.showinfo("Result", airline_code + " is NOT in terminal " + t_name)
+    airline = airline_entry.get()
+
+    t_obj = None
+    for t in bcn.terminals:
+        if t.name == t_name:
+            t_obj = t
+
+    if t_obj:
+        res = IsAirlineInTerminal(t_obj, airline)
+        messagebox.showinfo("Result", str(res))
+
 def AssignGateUI():
-    global bcn
-    if bcn == None:
-        messagebox.showerror("Error", "Load airport structure first")
+    if not bcn:
         return
+
     aircraft_id = aircraft_entry.get()
-    if aircraft_id == "":
-        messagebox.showerror("Error", "Enter an aircraft ID")
-        return
     arrivals = LoadArrivals()
+
     target = None
-    i = 0
-    while i < len(arrivals):
-        if arrivals[i].id == aircraft_id:
-            target = arrivals[i]
-        i = i + 1
-    if target == None:
-        messagebox.showerror("Not Found", "Aircraft " + aircraft_id + " not found in Arrivals.txt")
-        return
-    result = AssignGate(bcn, target)
-    if result == -1:
-        messagebox.showerror("Failed", "No free gate available for " + aircraft_id)
-        return
-    gate_name = ""
-    t = 0
-    while t < len(bcn.terminals):
-        a = 0
-        while a < len(bcn.terminals[t].areas):
-            g = 0
-            while g < len(bcn.terminals[t].areas[a].gates):
-                if bcn.terminals[t].areas[a].gates[g].ID == aircraft_id:
-                    gate_name = bcn.terminals[t].areas[a].gates[g].name
-                g = g + 1
-            a = a + 1
-        t = t + 1
-    messagebox.showinfo("Gate Assigned", "Aircraft: " + aircraft_id + "\nAirline: " + target.company + "\nOrigin: " + target.origin + "\nGate: " + gate_name)
+    for a in arrivals:
+        if a.id == aircraft_id:
+            target = a
+
+    if target:
+        AssignGate(bcn, target)
+
+def BuildAirlineFilter(parent):
+
+    global airline_search_var
+
+    Label(
+        parent,
+        text="Airline Filter",
+        bg="#222233",
+        fg="#c084fc",
+        font=("Segoe UI", 11, "bold")
+    ).pack(pady=10)
+
+    airline_search_var = StringVar()
+
+    Entry(
+        parent,
+        textvariable=airline_search_var,
+        width=25
+    ).pack(pady=5)
+
+    available_box = Listbox(parent, height=12)
+    available_box.pack(padx=10, pady=5, fill="x")
+
+    Label(
+        parent,
+        text="Selected",
+        bg="#222233",
+        fg="white"
+    ).pack()
+
+    selected_box = Listbox(parent, height=8)
+    selected_box.pack(padx=10, pady=5, fill="x")
+
+    data = LoadArrivals()
+    airlines = sorted(set(d.company for d in data))
+
+    def refresh_available():
+
+        available_box.delete(0, END)
+
+        q = airline_search_var.get().lower()
+
+        for a in airlines:
+            if q in a.lower():
+                available_box.insert(END, a)
+
+    def refresh_selected():
+
+        selected_box.delete(0, END)
+
+        for a in selected_airlines:
+            selected_box.insert(END, a)
+
+    def add():
+
+        try:
+            val = available_box.get(available_box.curselection())
+
+            if val not in selected_airlines:
+                selected_airlines.append(val)
+
+            refresh_selected()
+
+        except:
+            pass
+
+    def remove():
+
+        try:
+            val = selected_box.get(selected_box.curselection())
+
+            selected_airlines.remove(val)
+
+            refresh_selected()
+
+        except:
+            pass
+
+    def clear():
+
+        selected_airlines.clear()
+        refresh_selected()
+
+    airline_search_var.trace_add(
+        "write",
+        lambda *args: refresh_available()
+    )
+
+    Button(
+        parent,
+        text="Add →",
+        command=add
+    ).pack(pady=2)
+
+    Button(
+        parent,
+        text="← Remove",
+        command=remove
+    ).pack(pady=2)
+
+    Button(
+        parent,
+        text="Clear",
+        command=clear
+    ).pack(pady=2)
+
+    Button(
+        parent,
+        text="Apply",
+        bg="#7c3aed",
+        fg="white",
+        command=PlotAl
+    ).pack(pady=10)
+
+    refresh_available()
+    refresh_selected()
+
+left = Frame(root, bg="#2a2a3d")
+left.grid(row=0, column=0, sticky="nsew")
+
+Label(left,
+      text="AIRPORT CONTROL",
+      bg="#2a2a3d",
+      fg="#c084fc",
+      font=("Segoe UI", 16, "bold")).grid(row=0, column=0, pady=10)
+
+BTN = {
+    "bg": "#7c3aed",
+    "fg": "white",
+    "font": FONT_B,
+    "width": 24,
+    "height": 1,
+    "relief": "flat"
+}
 
 
-Label(root, text="Airport Management", bg='#2a2a3d', fg='#c084fc', font=("Segoe UI", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
+Label(left, text="Graphs", bg="#2a2a3d", fg="#c084fc").grid()
 
-frame1 = LabelFrame(root, text="Existing File Operations", font=FONT_TITLE)
-frame1.configure(bg='#2a2a3d', fg="#c084fc")
-frame1.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-frame1.columnconfigure(0, weight=1)
-Button(frame1, text="Plot Airports",              command=PlotAp,     bg='#7c3aed', fg="white", font=FONT_B).grid(row=3, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Plot Arrivals by type",      command=PlotFlTy,   bg='#7c3aed', fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Plot Airlines",              command=PlotAl,     bg='#7c3aed', fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Plot Arrivals",              command=PlotArrRate, bg='#7c3aed', fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Airports",               command=MapAp,      bg='#7c3aed', fg="white", font=FONT_B).grid(row=7, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Arrivals",               command=MapFl,      bg='#7c3aed', fg="white", font=FONT_B).grid(row=8, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame1, text="Map Long Distance Arrivals", command=MapFlLong,  bg='#7c3aed', fg="white", font=FONT_B).grid(row=9, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(left, text="Airports", command=PlotAp, **BTN).grid(pady=2)
+Button(left, text="Show Airlines", command=PlotAl, **BTN).grid(pady=2)
 
-frame2 = LabelFrame(root, text="Add / Save / Remove:", font=FONT_TITLE)
-frame2.configure(bg='#2a2a3d', fg="#c084fc")
-frame2.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
-frame2.columnconfigure(0, weight=1)
-Label(frame2, text="Enter Airport:",               bg="#2a2a3d", fg="#c084fc", font=FONT_B).grid(row=0, column=0, columnspan=2)
-Label(frame2, text="ICAO code: (e.g. 'LEBL.txt')",    bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=1, column=0)
-icao = Entry(frame2, width=40, font=FONT, bg='#c084fc')
-icao.grid(row=1, column=1, padx=5, pady=5)
-Label(frame2, text="Latitude: (e.g. 'N411749')",   bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=2, column=0)
-latitude = Entry(frame2, width=40, font=FONT, bg='#c084fc')
-latitude.grid(row=2, column=1, padx=5, pady=5)
-Label(frame2, text="Longitude: (e.g. 'E0020442')", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=3, column=0)
-longitude = Entry(frame2, width=40, font=FONT, bg='#c084fc')
-longitude.grid(row=3, column=1, padx=5, pady=5)
-Button(frame2, text="Save Schengen Airports Only", command=Save,   bg="#7c3aed", fg="white", font=FONT_B).grid(row=4, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame2, text="Add Airport list to File",    command=Add,    bg="#7c3aed", fg="white", font=FONT_B).grid(row=5, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame2, text="Remove Airport",              command=Remove, bg="#7c3aed", fg="white", font=FONT_B).grid(row=6, column=0, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Button(left, text="Arrivals", command=PlotArrRate, **BTN).grid(pady=2)
+Button(left, text="Flight Types", command=PlotFlTy, **BTN).grid(pady=2)
 
-frame3 = LabelFrame(root, text="Figure Visualizer", font=FONT_TITLE)
-frame3.configure(bg='#2a2a3d', fg="#c084fc")
-frame3.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
+Button(left, text="Map Airports", command=MapAp, **BTN).grid(pady=2)
+Button(left, text="Map Flights", command=MapFl, **BTN).grid(pady=2)
+Button(left, text="Long Flights", command=MapFlLong, **BTN).grid(pady=2)
+
+Label(left, text="Airports", bg="#2a2a3d", fg="#c084fc").grid(pady=5)
+
+icao = Entry(left, width=30); icao.grid(pady=1)
+latitude = Entry(left, width=30); latitude.grid(pady=1)
+longitude = Entry(left, width=30); longitude.grid(pady=1)
+
+Button(left, text="Save", command=Save, **BTN).grid(pady=2)
+Button(left, text="Add", command=Add, **BTN).grid(pady=2)
+Button(left, text="Remove", command=Remove, **BTN).grid(pady=2)
+
+Label(left, text="Operations", bg="#2a2a3d", fg="#c084fc").grid(pady=5)
+
+Button(left, text="Load Structure", command=LoadAP, **BTN).grid(pady=2)
+Button(left, text="Occupancy", command=ShowOccupancy, **BTN).grid(pady=2)
+
+terminal_entry = Entry(left, width=30); terminal_entry.grid(pady=1)
+airline_entry = Entry(left, width=30); airline_entry.grid(pady=1)
+
+Button(left, text="Check Airline", command=CheckIsAirlineInTerminal, **BTN).grid(pady=2)
+Button(left, text="Search Airline", command=SearchAirline, **BTN).grid(pady=2)
+
+aircraft_entry = Entry(left, width=30); aircraft_entry.grid(pady=1)
+
+Button(left, text="Assign Gate", command=AssignGateUI, **BTN).grid(pady=2)
+
+frame3 = Frame(root, bg="#2a2a3d")
+frame3.grid(row=0, column=1, sticky="nsew")
+
 frame3.rowconfigure(0, weight=1)
 frame3.columnconfigure(0, weight=1)
-Label(frame3, text="Press any 'Plot' button to display", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=0, column=0)
 
-frame4 = LabelFrame(root, text="Airport Operations", font=FONT_TITLE)
-frame4.configure(bg='#2a2a3d', fg="#c084fc")
-frame4.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
-frame4.columnconfigure(0, weight=1)
-frame4.columnconfigure(1, weight=1)
-Button(frame4, text="Load Airport Structure",  command=LoadAP,        bg='#7c3aed', fg="white", font=FONT_B).grid(row=0, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame4, text="Show Gate Occupancy",     command=ShowOccupancy, bg='#7c3aed', fg="white", font=FONT_B).grid(row=1, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Label(frame4, text="Terminal (e.g. T1):",      bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=2, column=0, sticky="w", padx=5)
-terminal_entry = Entry(frame4, width=10, font=FONT, bg='#c084fc')
-terminal_entry.grid(row=2, column=1, padx=5, pady=3, sticky="ew")
-Label(frame4, text="Airline ICAO (e.g. VLG):", bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=3, column=0, sticky="w", padx=5)
-airline_entry = Entry(frame4, width=10, font=FONT, bg='#c084fc')
-airline_entry.grid(row=3, column=1, padx=5, pady=3, sticky="ew")
-Button(frame4, text="Is Airline in Terminal?",     command=CheckIsAirlineInTerminal, bg='#7c3aed', fg="white", font=FONT_B).grid(row=4, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Button(frame4, text="Search Terminal for Airline", command=SearchAirline,            bg='#7c3aed', fg="white", font=FONT_B).grid(row=5, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
-Label(frame4, text="Aircraft ID (e.g. ECMKV):",   bg="#2a2a3d", fg="#c084fc", font=FONT).grid(row=6, column=0, sticky="w", padx=5)
-aircraft_entry = Entry(frame4, width=10, font=FONT, bg='#c084fc')
-aircraft_entry.grid(row=6, column=1, padx=5, pady=3, sticky="ew")
-Button(frame4, text="Assign Gate to Aircraft",     command=AssignGateUI,             bg='#7c3aed', fg="white", font=FONT_B).grid(row=7, column=0, columnspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky="nsew")
+Label(frame3,
+      text="Select a function",
+      bg="#2a2a3d",
+      fg="#c084fc",
+      font=("Segoe UI", 14)).grid()
 
-
-root.mainloop()
+root.mainloop(
