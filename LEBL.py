@@ -191,3 +191,15 @@ def AssignGate (bcn , aircraft ):
                 gate.ID = aircraft.id
                 return 0
     return -1
+
+def AssignNightGates(bcn, aircrafts):
+    #VERIFICAMOS con la condicion aircrafts[i].time == "00:00" and aircrafts[i].origin == "" que no tiene llegadas, aka es nocturno
+    #Luego con funcion AssigGate le asignamos un puerta y pasa al siguiente
+    if len(aircrafts) == 0:
+        return -1
+    i = 0
+    while i < len(aircrafts):
+        # Only process aircraft with no arrival data (night aircraft)
+        if aircrafts[i].time == "00:00" and aircrafts[i].origin == "":
+            AssignGate(bcn, aircrafts[i])
+        i = i + 1
