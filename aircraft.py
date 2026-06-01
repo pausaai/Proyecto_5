@@ -272,4 +272,87 @@ def LongDistanceArrivals(aircrafts):
                 mayorlimite.append(aircrafts[i])
         i+= 1
     return mayorlimite
+    
+#Leemos el fichero de salidas línea por línea, y por cada línea válida crea un objeto Aircraft rellenando solo los campos de salida (id, destination, dep_time, company).
+# Si el fichero no existe devuelve una lista vacía y un código de error -1.
+def LoadDepartures(filename):
+    departures = []
+    try:
+        f = open(filename, 'r')
+    except FileNotFoundError:
+        return [], -1
+    f.readline()  # skip header
+    line = f.readline()
+    while line != '':
+        data = line.split()
+        if len(data) == 4 and GoodTimeFormat(data[2]):
+            a = Aircraft()
+            a.id          = data[0]
+            a.destination = data[1]
+            a.dep_time    = data[2]
+            a.company     = data[3]
+            departures = departures + [a]
+        line = f.readline()
+    f.close()
+    return departures
+
+def MergeMovements(arrivals, departures):
+    if len(arrivals) == 0 or len(departures) == 0:
+        return -1
+    merged = []
+    # Copiamos llegadas en la lista merged
+    i = 0
+    while i < len(arrivals):
+        a = Aircraft()
+        a.id          = arrivals[i].id
+        a.company     = arrivals[i].company
+        a.origin      = arrivals[i].origin
+        a.time        = arrivals[i].time
+        a.destination = arrivals[i].destination
+        a.dep_time    = arrivals[i].dep_time
+        merged = merged + [a]
+        i = i + 1
+    # Igualamos llegadas con salidad
+    d = 0
+    while d < len(departures):
+        matched = False
+        m = 0
+        while m < len(merged):
+            same_id       = merged[m].id == departures[d].id
+            has_arrival   = merged[m].time != "00:00"
+            no_departure  = merged[m].dep_time == "00:00"
+            arr_before_dep = merged[m].time < departures[d].dep_time
+            if same_id and has_arrival and no_departure and arr_before_dep:
+                merged[m].destination = departures[d].destination
+                merged[m].dep_time    = departures[d].dep_time
+                matched = True
+                break
+            m = m + 1
+        # Si No podemos encajar una llegada con un salidad eso significa que es un vuelo nocturno veamos la section 4 del proyecto que nos dice
+        #que estos vuelo son nocturnos, salen pero no vuelven en el dia
+
+        if not matched:
+            a = Aircraft()
+            a.id          = departures[d].id
+            a.company     = departures[d].company
+            a.destination = departures[d].destination
+            a.dep_time    = departures[d].dep_time
+            merged = merged + [a]
+        d = d + 1
+    return merged
+#Basicamente recorremos todas las salidas hasta encotrAR una llegada con el mismo id cuya hora de llegada sea
+#antes y los fusionas en uno solo, si no añade el avion como avion nocturno
+
+def NightAircraft(aircrafts):
+    if len(aircrafts) == 0:
+        return -1
+    night = []
+    i = 0
+    while i < len(aircrafts):
+        if aircrafts[i].time == "00:00" and aircrafts[i].dep_time != "00:00":
+            night = night + [aircrafts[i]]
+        i = i + 1
+    return night
+#Esta funcion es mas sencilla creamos lista night y hacemos que vaya añadiendo aviones que sean nocturnos
+#Es decir que no tenga llegadas, porque o paso la noche en LEBL o salió muy tarde sin volver
 
