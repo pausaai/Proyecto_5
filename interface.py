@@ -16,8 +16,31 @@ except FileNotFoundError:
     sys.exit(1)
 
 root = Tk()
+
+# ═══════════════════════════════════════════════════════════════════════════
+# THEME
+# ═══════════════════════════════════════════════════════════════════════════
+
+BG_MAIN      = "#1f2937"   # fondo principal
+BG_PANEL     = "#273449"   # paneles
+BG_SECONDARY = "#334155"   # paneles secundarios
+CTRL_BG      = "#475569"   # entradas
+
+TEXT_PRIMARY = "#f8fafc"
+TEXT_MUTED   = "#94a3b8"
+TEXT_ACCENT  = "#38bdf8"
+
+BTN_BG       = "#0ea5e9"
+BTN_HOVER    = "#0284c7"
+
+SUCCESS      = "#22c55e"
+ERROR        = "#ef4444"
+WARNING      = "#f59e0b"
+
+PLACEHOLDER_COLOR = TEXT_MUTED
+NORMAL_COLOR      = TEXT_PRIMARY
 root.title("Airport Management System")
-root.geometry("1450x850")
+root.geometry("1920x1080")
 root.configure(bg="#2a2a3d")
 
 root.rowconfigure(0, weight=1)
@@ -26,11 +49,11 @@ root.columnconfigure(1, weight=5)
 
 FONT_B = ("Segoe UI", 9, "bold")
 
-bcn = None
+bcn = LoadAirportStructure()
 
 # ── Placeholder helper ────────────────────────────────────────────────────
-PLACEHOLDER_COLOR = "#888899"
-NORMAL_COLOR      = "#ffffff"
+PLACEHOLDER_COLOR = TEXT_MUTED
+NORMAL_COLOR      = TEXT_PRIMARY
 
 def add_placeholder(entry, text):
     entry.insert(0, text)
@@ -72,13 +95,13 @@ def ShowPlot(fig, right_panel_builder=None):
     frame3.rowconfigure(0, weight=1)
 
     if right_panel_builder:
-        frame3.columnconfigure(0, weight=4)
+        frame3.columnconfigure(0, weight=6)
         frame3.columnconfigure(1, weight=1)
 
-        graph_frame = Frame(frame3, bg="#2a2a3d")
+        graph_frame = Frame(frame3, bg=BG_MAIN)
         graph_frame.grid(row=0, column=0, sticky="nsew")
 
-        right_frame = Frame(frame3, bg="#222233", width=280)
+        right_frame = Frame(frame3, bg=BG_PANEL, width=280)
         right_frame.grid(row=0, column=1, sticky="nsew")
         right_frame.pack_propagate(False)
 
@@ -101,23 +124,33 @@ airline_search_var = None
 
 
 def OpenAirlineSelector():
-    global all_airlines
-    data = LoadArrivals()
+    try:
+        data, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals data:\n{e}")
+        return
+    if not data:
+        messagebox.showwarning("No Data", "No arrivals data found to filter by airline.")
+        return
+
     all_airlines = sorted(list(set([d.company for d in data])))
 
     win = Toplevel(root)
     win.title("Airline Filter")
     win.geometry("420x520")
-    win.configure(bg="#2a2a3d")
+    win.configure(bg=BG_MAIN)
 
-    Label(win, text="Search airline:", bg="#2a2a3d", fg="white").pack(pady=5)
+    Label(win, text="Search airline:", bg=BG_MAIN, fg=TEXT_PRIMARY).pack(pady=5)
     search_var = StringVar()
     Entry(win, textvariable=search_var, width=35).pack()
 
     listbox = Listbox(win, height=10, width=40)
     listbox.pack(pady=5)
 
-    Label(win, text="Selected airlines:", bg="#2a2a3d", fg="#c084fc").pack()
+    Label(win, text="Selected airlines:", bg=BG_MAIN, fg="#c084fc").pack()
     selected_box = Listbox(win, height=6, width=40)
     selected_box.pack(pady=5)
 
@@ -140,7 +173,7 @@ def OpenAirlineSelector():
                 selected_airlines.append(val)
                 refresh_selected()
         except:
-            messagebox.showerror("Error", "Select airline")
+            messagebox.showerror("Error", "Select an airline from the list first.")
 
     def remove():
         try:
@@ -148,13 +181,20 @@ def OpenAirlineSelector():
             selected_airlines.remove(val)
             refresh_selected()
         except:
-            messagebox.showerror("Error", "Select selected airline")
+            messagebox.showerror("Error", "Select a selected airline to remove first.")
 
     def clear():
         selected_airlines.clear()
         refresh_selected()
 
     def apply():
+        # ── NEW: warn if no airlines selected (will show all) ─────────────
+        if not selected_airlines:
+            if not messagebox.askyesno(
+                "No Filter",
+                "No airlines selected — all airlines will be shown.\nContinue?"
+            ):
+                return
         win.destroy()
         PlotAl()
 
@@ -166,34 +206,122 @@ def OpenAirlineSelector():
     Button(win, text="← Remove",     command=remove, width=20).pack(pady=2)
     Button(win, text="Clear",        command=clear,  width=20).pack(pady=2)
     Button(win, text="Apply Filter", command=apply,  width=25,
-           bg="#7c3aed", fg="white").pack(pady=10)
+           bg=BTN_BG, fg="white").pack(pady=10)
 
 
 def PlotAp():
-    ShowPlot(PlotAirports(LoadAirports()))
+    # ── NEW: guard against empty airport data ─────────────────────────────
+    try:
+        airports = LoadAirports()
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load airports:\n{e}")
+        return
+    if not airports:
+        messagebox.showwarning("No Data", "No airports found in Airports.txt.")
+        return
+    ShowPlot(PlotAirports(airports))
 
 def PlotArrRate():
-    ShowPlot(PlotArrivals(LoadArrivals()))
+    try:
+        arrivals, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+    if not arrivals:
+        messagebox.showwarning("No Data", "No arrivals data found to plot.")
+        return
+    ShowPlot(PlotArrivals(arrivals))
 
 def PlotFlTy():
-    ShowPlot(PlotFlightsType(LoadArrivals()))
+    try:
+        arrivals, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+    if not arrivals:
+        messagebox.showwarning("No Data", "No arrivals data found to plot flight types.")
+        return
+    ShowPlot(PlotFlightsType(arrivals))
 
 def PlotAl():
-    data = LoadArrivals()
+    try:
+        data, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+    if not data:
+        messagebox.showwarning("No Data", "No arrivals data found to plot airlines.")
+        return
     filtered = [d for d in data if d.company in selected_airlines] if selected_airlines else data
+    if not filtered:
+        messagebox.showwarning("No Results", "The selected airline filter returned no flights.\nTry removing some airlines from the filter.")
+        return
     ShowPlot(PlotAirlines(filtered), right_panel_builder=BuildAirlineFilter)
 
 def MapAp():
-    MapAirports(LoadAirports())
-    os.system("start Airports.kml")
+    # ── NEW: guard against empty airport data ─────────────────────────────
+    try:
+        airports = LoadAirports()
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load airports:\n{e}")
+        return
+    if not airports:
+        messagebox.showwarning("No Data", "No airports found in Airports.txt.")
+        return
+    try:
+        MapAirports(airports)
+        os.system("start Airports.kml")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to generate airport map:\n{e}")
 
 def MapFl():
-    MapFlights(LoadArrivals())
-    os.system("start Flights.kml")
+    try:
+        arrivals, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+    if not arrivals:
+        messagebox.showwarning("No Data", "No arrivals data found to map.")
+        return
+    try:
+        MapFlights(arrivals)
+        os.system("start Flights.kml")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to generate flights map:\n{e}")
 
 def MapFlLong():
-    MapFlights(LongDistanceArrivals(LoadArrivals()))
-    os.system("start Flights.kml")
+    try:
+        arrivals, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+    if not arrivals:
+        messagebox.showwarning("No Data", "No arrivals data found.")
+        return
+    long_flights = LongDistanceArrivals(arrivals)
+    if not long_flights:
+        messagebox.showwarning("No Results", "No long-distance arrivals found in the data.")
+        return
+    try:
+        MapFlights(long_flights)
+        os.system("start Flights.kml")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to generate long-distance flights map:\n{e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -201,28 +329,88 @@ def MapFlLong():
 # ═══════════════════════════════════════════════════════════════════════════
 
 def Save():
-    lat = get_value(latitude, PH_LAT)
-    lon = get_value(longitude, PH_LON)
-    if lat == "" or lon == "":
-        messagebox.showerror("Error", "Check coordinates")
+    icao_val = get_value(icao, PH_ICAO)
+    lat      = get_value(latitude,  PH_LAT)
+    lon      = get_value(longitude, PH_LON)
+
+    # ── NEW: validate all three fields ────────────────────────────────────
+    if icao_val == "":
+        messagebox.showerror("Error", "ICAO code is required.")
         return
-    a = Airport()
-    a.icao      = get_value(icao, PH_ICAO)
-    a.latitude  = ConvertCoordinates(lat)
-    a.longitude = ConvertCoordinates(lon)
-    SetSchengen(a)
-    SaveSchengenAirports(a)
+    if lat == "" or lon == "":
+        messagebox.showerror("Error", "Both latitude and longitude are required.")
+        return
+
+    try:
+        a = Airport()
+        a.icao      = icao_val
+        a.latitude  = ConvertCoordinates(lat)
+        a.longitude = ConvertCoordinates(lon)
+        SetSchengen(a)
+        SaveSchengenAirports(a)
+        # ── NEW: success confirmation ──────────────────────────────────────
+        messagebox.showinfo("Saved", f"Airport '{icao_val}' saved successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save airport:\n{e}")
 
 def Add():
-    a = Airport()
-    a.icao      = get_value(icao, PH_ICAO)
-    a.latitude  = ConvertCoordinates(get_value(latitude, PH_LAT))
-    a.longitude = ConvertCoordinates(get_value(longitude, PH_LON))
-    SetSchengen(a)
-    AddAirport(a)
+    icao_val = get_value(icao,      PH_ICAO)
+    lat      = get_value(latitude,  PH_LAT)
+    lon      = get_value(longitude, PH_LON)
+
+    # ── NEW: validate all fields before adding ────────────────────────────
+    if icao_val == "":
+        messagebox.showerror("Error", "ICAO code is required.")
+        return
+    if lat == "":
+        messagebox.showerror("Error", "Latitude is required.")
+        return
+    if lon == "":
+        messagebox.showerror("Error", "Longitude is required.")
+        return
+
+    try:
+        a = Airport()
+        a.icao      = icao_val
+        a.latitude  = ConvertCoordinates(lat)
+        a.longitude = ConvertCoordinates(lon)
+        SetSchengen(a)
+        AddAirport(a)
+        # ── NEW: success confirmation ──────────────────────────────────────
+        if lat != "" and lon != "":
+            messagebox.showinfo("Added", f"Airport '{icao_val}' added successfully.")
+        else:
+            messagebox.showerror("Error", "Latitude and longitude are required.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to add airport:\n{e}")
 
 def Remove():
-    RemoveAirport(LoadAirports(), get_value(icao, PH_ICAO))
+    icao_val = get_value(icao, PH_ICAO)
+
+    # ── NEW: validate ICAO field ──────────────────────────────────────────
+    if icao_val == "":
+        messagebox.showerror("Error", "Enter an ICAO code to remove.")
+        return
+
+    # ── NEW: confirm before deleting ─────────────────────────────────────
+    if not messagebox.askyesno(
+        "Confirm Removal",
+        f"Are you sure you want to remove airport '{icao_val}'?"
+    ):
+        return
+
+    try:
+        airports = LoadAirports()
+        # ── NEW: check the airport actually exists ────────────────────────
+        exists = any(a.icao == icao_val for a in airports)
+        if not exists:
+            messagebox.showerror("Not Found", f"Airport '{icao_val}' not found in Airports.txt.")
+            return
+        RemoveAirport(airports, icao_val)
+        # ── NEW: success confirmation ──────────────────────────────────────
+        messagebox.showinfo("Removed", f"Airport '{icao_val}' removed successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to remove airport:\n{e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -231,7 +419,7 @@ def Remove():
 
 def LoadAP():
     global bcn
-    result = LoadAirportStructure("Terminals.txt")
+    result = LoadAirportStructure()
     if result == -1:
         messagebox.showerror("Error", "Terminals.txt not found")
         return
@@ -245,77 +433,74 @@ def LoadAP():
 
 def RenderOccupancyChart(graph_frame, terminal_filter, area_filter,
                           airline_filter, status_filter, search_text):
-    """Build and draw the occupancy bar chart into graph_frame."""
     for w in graph_frame.winfo_children():
         w.destroy()
 
-    occupancy = GateOccupancy(bcn)
+    if bcn is None:
+        messagebox.showerror("Error", "Airport structure is not loaded.")
+        return
 
-    # ── apply filters ──────────────────────────────────────────────────────
-    filtered = []
-    for row in occupancy:
-        gate_name = row[0]   # e.g. "T1a3"
-        status    = row[1]   # "free" or "occupied"
-        aircraft  = row[2]   # aircraft ID or ""
+    try:
+        occupancy = GateOccupancy(bcn)
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to retrieve gate occupancy:\n{e}")
+        return
 
-        # terminal filter: gate name starts with terminal name
-        if terminal_filter != "All":
-            if not gate_name.startswith(terminal_filter):
-                continue
+    # load arrivals once up front, only if airline filter is active
+    arrival_lookup = {}
+    if airline_filter != "All":
+        try:
+            arrivals, err = LoadMovements("Arrivals.txt")
+            if err == 0:
+                arrival_lookup = {a.id: a.company for a in arrivals}
+        except:
+            pass
 
-        # area filter: letter after terminal prefix
+    def matches(row):
+        gate_name, status, aircraft = row
+
+        if terminal_filter != "All" and not gate_name.startswith(terminal_filter):
+            return False
+
         if area_filter != "All":
-            prefix_len = len(terminal_filter) if terminal_filter != "All" else 2
-            area_letter = ""
-            for ch in gate_name:
-                if ch.isalpha() and gate_name.index(ch) >= 1:
-                    area_letter = ch
-                    break
-            # simpler: find the first lowercase letter in gate_name
-            for ch in gate_name:
-                if ch.islower():
-                    area_letter = ch
-                    break
+            area_letter = next((ch for ch in gate_name if ch.islower()), "")
             if area_letter != area_filter.lower():
-                continue
+                return False
 
-        # status filter
-        if status_filter != "All":
-            if status != status_filter.lower():
-                continue
+        if status_filter != "All" and status != status_filter.lower():
+            return False
 
-        # airline filter — match aircraft ID prefix against arrivals
-        if airline_filter != "All" and status == "occupied":
-            arrivals = LoadArrivals()
-            match = next((a for a in arrivals
-                          if a.id == aircraft and a.company == airline_filter), None)
-            if match is None:
-                continue
+        if airline_filter != "All":
+            if status != "occupied":
+                return False
+            if arrival_lookup.get(aircraft) != airline_filter:
+                return False
 
-        # search text
         if search_text:
             if search_text.lower() not in gate_name.lower() and \
                search_text.lower() not in aircraft.lower():
-                continue
+                return False
 
-        filtered.append(row)
+        return True
+
+    filtered = [row for row in occupancy if matches(row)]
 
     # ── draw chart ─────────────────────────────────────────────────────────
     if not filtered:
         Label(graph_frame, text="No gates match the current filters.",
-              bg="#2a2a3d", fg="#c084fc", font=("Segoe UI", 13)).pack(expand=True)
+              bg=BG_MAIN, fg=TEXT_ACCENT, font=("Segoe UI", 13)).pack(expand=True)
         return
 
     names   = [row[0] for row in filtered]
     statuses= [row[1] for row in filtered]
     ids     = [row[2] for row in filtered]
-    colors  = ["#4ade80" if s == "free" else "#f87171" for s in statuses]
+    colors  = [SUCCESS if s == "free" else ERROR for s in statuses]
 
     fig, ax = plt.subplots(figsize=(10, max(3, len(names) * 0.32)))
-    fig.patch.set_facecolor("#2a2a3d")
+    fig.patch.set_facecolor(BG_MAIN)
     ax.set_facecolor("#1e1e2e")
 
-    ax.barh(names, [1] * len(names), color=colors, edgecolor="#2a2a3d", height=0.72)
+    ax.barh(names, [1] * len(names), color=colors, edgecolor=BG_MAIN, height=0.72)
 
     for i, (status, aid) in enumerate(zip(statuses, ids)):
         label = "Free" if status == "free" else f"Occupied  ·  {aid}"
@@ -330,16 +515,16 @@ def RenderOccupancyChart(graph_frame, terminal_filter, area_filter,
     ax.set_title(
         f"Gate Occupancy — LEBL Barcelona\n"
         f"{total} gates  ·  {n_free} free  ·  {n_occ} occupied",
-        color="#c084fc", fontsize=11, fontweight="bold", pad=10
+        color=TEXT_ACCENT, fontsize=11, fontweight="bold", pad=10
     )
-    ax.tick_params(colors="#a0a0c0", labelsize=7.5)
+    ax.tick_params(colors=TEXT_MUTED, labelsize=7.5)
     ax.spines[:].set_visible(False)
     ax.xaxis.set_visible(False)
 
-    free_p = mpatches.Patch(color="#4ade80", label=f"Free ({n_free})")
-    occ_p  = mpatches.Patch(color="#f87171", label=f"Occupied ({n_occ})")
+    free_p = mpatches.Patch(color=SUCCESS, label=f"Free ({n_free})")
+    occ_p  = mpatches.Patch(color=ERROR, label=f"Occupied ({n_occ})")
     ax.legend(handles=[free_p, occ_p], loc="lower right",
-              facecolor="#313244", labelcolor="white", fontsize=8)
+              facecolor=BG_SECONDARY, labelcolor=TEXT_PRIMARY, fontsize=8)
 
     plt.tight_layout()
 
@@ -352,10 +537,10 @@ def RenderOccupancyChart(graph_frame, terminal_filter, area_filter,
 def BuildOccupancyPanel(right_frame, graph_frame):
     """Side panel with all filters for the occupancy view."""
 
-    PANEL_BG  = "#222233"
-    CTRL_BG   = "#2e2e44"
-    FG        = "#c084fc"
-    FG2       = "#ffffff"
+    PANEL_BG  = BG_PANEL
+    CTRL_BG   = BG_SECONDARY
+    FG        = TEXT_ACCENT
+    FG2       = TEXT_MUTED
     FONT_LBL  = ("Segoe UI", 8, "bold")
     FONT_CTRL = ("Segoe UI", 9)
 
@@ -369,12 +554,12 @@ def BuildOccupancyPanel(right_frame, graph_frame):
     areas = ["All"] + sorted(areas_set)
 
     airlines_set = set()
-    try:
-        data = LoadArrivals()
+    data, err = LoadMovements("Arrivals.txt")
+    if err == -1:
+        pass
+    else:
         for d in data:
             airlines_set.add(d.company)
-    except:
-        pass
     airlines = ["All"] + sorted(airlines_set)
 
     statuses = ["All", "Free", "Occupied"]
@@ -414,27 +599,28 @@ def BuildOccupancyPanel(right_frame, graph_frame):
 
     def on_mouse(e):
         canvas_p.yview_scroll(int(-1 * (e.delta / 120)), "units")
-    canvas_p.bind_all("<MouseWheel>", on_mouse)
+        canvas_p.bind("<Enter>", lambda e: canvas_p.bind_all("<MouseWheel>", on_mouse))
+        canvas_p.bind("<Leave>", lambda e: canvas_p.unbind_all("<MouseWheel>"))
 
     # ── helper to add a section ────────────────────────────────────────────
     def section(title):
         Label(inner, text=title, bg=PANEL_BG, fg=FG,
               font=FONT_LBL).pack(anchor="w", padx=10, pady=(12, 2))
-        Frame(inner, bg="#3a3a5c", height=1).pack(fill=X, padx=8, pady=(0, 4))
+        Frame(inner, bg=CTRL_BG, height=1).pack(fill=X, padx=8, pady=(0, 4))
 
     def dropdown(var, options):
         om = OptionMenu(inner, var, *options, command=refresh)
         om.config(bg=CTRL_BG, fg=FG2, font=FONT_CTRL, relief=FLAT,
-                  activebackground="#3a3a5c", activeforeground=FG2,
+                  activebackground=CTRL_BG, activeforeground=FG2,
                   highlightthickness=0, width=18)
         om["menu"].config(bg=CTRL_BG, fg=FG2, font=FONT_CTRL,
-                          activebackground="#7c3aed")
+                          activebackground=BTN_BG)
         om.pack(padx=10, pady=2, fill=X)
 
     def listbox_filter(var, options, height=5):
         """Listbox that updates var and triggers refresh on select."""
         lb = Listbox(inner, bg=CTRL_BG, fg=FG2, font=FONT_CTRL,
-                     selectbackground="#7c3aed", selectforeground="white",
+                     selectbackground=BTN_BG, selectforeground=TEXT_PRIMARY,
                      height=height, relief=FLAT, bd=0,
                      exportselection=False)
         for o in options:
@@ -455,9 +641,9 @@ def BuildOccupancyPanel(right_frame, graph_frame):
     # ── title ──────────────────────────────────────────────────────────────
     Label(inner, text="Gate Occupancy", bg=PANEL_BG, fg=FG,
           font=("Segoe UI", 11, "bold")).pack(pady=(14, 2))
-    Label(inner, text="Filters", bg=PANEL_BG, fg="#888899",
+    Label(inner, text="Filters", bg=PANEL_BG, fg=TEXT_MUTED,
           font=("Segoe UI", 8)).pack()
-    Frame(inner, bg="#3a3a5c", height=1).pack(fill=X, padx=8, pady=6)
+    Frame(inner, bg=CTRL_BG, height=1).pack(fill=X, padx=8, pady=6)
 
     # ── search ─────────────────────────────────────────────────────────────
     section("🔍  Search gate / aircraft")
@@ -472,7 +658,7 @@ def BuildOccupancyPanel(right_frame, graph_frame):
     status_frame = Frame(inner, bg=PANEL_BG)
     status_frame.pack(padx=10, pady=4, fill=X)
     for s in statuses:
-        color = "#4ade80" if s == "Free" else "#f87171" if s == "Occupied" else "#888899"
+        color = SUCCESS if s == "Free" else ERROR if s == "Occupied" else TEXT_MUTED
         rb = Radiobutton(status_frame, text=s, variable=status_var, value=s,
                          command=refresh, bg=PANEL_BG, fg=color,
                          selectcolor=PANEL_BG, activebackground=PANEL_BG,
@@ -498,7 +684,7 @@ def BuildOccupancyPanel(right_frame, graph_frame):
     add_placeholder(al_search, "Search airline…")
 
     al_lb = Listbox(inner, bg=CTRL_BG, fg=FG2, font=FONT_CTRL,
-                    selectbackground="#7c3aed", selectforeground="white",
+                    selectbackground=BTN_BG, selectforeground=TEXT_PRIMARY,
                     height=7, relief=FLAT, bd=0, exportselection=False)
     al_lb.pack(padx=10, pady=2, fill=X)
 
@@ -528,7 +714,7 @@ def BuildOccupancyPanel(right_frame, graph_frame):
     populate_airlines()
 
     # ── reset button ───────────────────────────────────────────────────────
-    Frame(inner, bg="#3a3a5c", height=1).pack(fill=X, padx=8, pady=10)
+    Frame(inner, bg=CTRL_BG, height=1).pack(fill=X, padx=8, pady=10)
 
     def reset_filters():
         terminal_var.set("All")
@@ -541,14 +727,14 @@ def BuildOccupancyPanel(right_frame, graph_frame):
         refresh()
 
     Button(inner, text="↺  Reset all filters", command=reset_filters,
-           bg="#3a3a5c", fg=FG2, font=FONT_CTRL, relief=FLAT,
-           activebackground="#7c3aed", activeforeground="white",
+           bg=CTRL_BG, fg=FG2, font=FONT_CTRL, relief=FLAT,
+           activebackground="#7c3aed", activeforeground=TEXT_PRIMARY,
            cursor="hand2").pack(padx=10, pady=4, fill=X, ipady=5)
 
     Frame(inner, bg=PANEL_BG, height=20).pack()
 
     # ── initial render ─────────────────────────────────────────────────────
-    refresh()
+    graph_frame.after(50, refresh)
 
 
 def ShowOccupancy():
@@ -560,13 +746,13 @@ def ShowOccupancy():
         w.destroy()
 
     frame3.rowconfigure(0, weight=1)
-    frame3.columnconfigure(0, weight=4)
+    frame3.columnconfigure(0, weight=6)
     frame3.columnconfigure(1, weight=1)
 
-    graph_frame = Frame(frame3, bg="#2a2a3d")
+    graph_frame = Frame(frame3, bg=BG_MAIN)
     graph_frame.grid(row=0, column=0, sticky="nsew")
 
-    right_frame = Frame(frame3, bg="#222233", width=280)
+    right_frame = Frame(frame3, bg=BG_PANEL, width=280)
     right_frame.grid(row=0, column=1, sticky="nsew")
     right_frame.pack_propagate(False)
 
@@ -579,13 +765,18 @@ def SearchAirline():
         return
     name = get_value(airline_entry, PH_AIRLINE)
     if name == "":
-        messagebox.showerror("Error", "Enter an airline name")
+        messagebox.showerror("Error", "Enter an airline ICAO code to search.")
         return
-    res = SearchTerminal(bcn, name)
+    # ── NEW: wrap in try/except ───────────────────────────────────────────
+    try:
+        res = SearchTerminal(bcn, name)
+    except Exception as e:
+        messagebox.showerror("Error", f"Search failed:\n{e}")
+        return
     if res == "":
-        messagebox.showinfo("Not found", f"{name} not found in any terminal")
+        messagebox.showinfo("Not Found", f"'{name}' was not found in any terminal.")
     else:
-        messagebox.showinfo("Terminal found", f"{name} boards at terminal {res}")
+        messagebox.showinfo("Terminal Found", f"'{name}' boards at terminal {res}.")
 
 def CheckIsAirlineInTerminal():
     if bcn is None:
@@ -593,15 +784,31 @@ def CheckIsAirlineInTerminal():
         return
     t_name  = get_value(terminal_entry, PH_TERMINAL)
     airline = get_value(airline_entry,  PH_AIRLINE)
-    t_obj   = next((t for t in bcn.terminals if t.name == t_name), None)
-    if t_obj is None:
-        messagebox.showerror("Error", "Terminal not found")
+
+    # ── NEW: validate both fields ─────────────────────────────────────────
+    if t_name == "":
+        messagebox.showerror("Error", "Enter a terminal name (e.g. T1).")
         return
-    res = IsAirlineInTerminal(t_obj, airline)
+    if airline == "":
+        messagebox.showerror("Error", "Enter an airline ICAO code.")
+        return
+
+    t_obj = next((t for t in bcn.terminals if t.name == t_name), None)
+    if t_obj is None:
+        messagebox.showerror("Not Found", f"Terminal '{t_name}' does not exist in the loaded structure.")
+        return
+
+    # ── NEW: wrap in try/except ───────────────────────────────────────────
+    try:
+        res = IsAirlineInTerminal(t_obj, airline)
+    except Exception as e:
+        messagebox.showerror("Error", f"Check failed:\n{e}")
+        return
+
     if res:
-        messagebox.showinfo("Result", f"{airline} IS in terminal {t_name}")
+        messagebox.showinfo("Result", f"'{airline}' IS assigned to terminal {t_name}.")
     else:
-        messagebox.showinfo("Result", f"{airline} is NOT in terminal {t_name}")
+        messagebox.showinfo("Result", f"'{airline}' is NOT assigned to terminal {t_name}.")
 
 def AssignGateUI():
     if bcn is None:
@@ -609,27 +816,117 @@ def AssignGateUI():
         return
     aircraft_id = get_value(aircraft_entry, PH_AIRCRAFT)
     if aircraft_id == "":
-        messagebox.showerror("Error", "Enter an aircraft ID")
+        messagebox.showerror("Error", "Enter an aircraft ID.")
         return
-    arrivals = LoadArrivals()
-    target   = next((a for a in arrivals if a.id == aircraft_id), None)
+    try:
+        arrivals, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+
+    target = next((a for a in arrivals if a.id == aircraft_id), None)
     if target is None:
-        messagebox.showerror("Not Found", f"Aircraft {aircraft_id} not found in Arrivals.txt")
+        messagebox.showerror("Not Found", f"Aircraft '{aircraft_id}' was not found in Arrivals.txt.")
         return
-    result = AssignGate(bcn, target)
+
+    # ── NEW: wrap AssignGate in try/except ────────────────────────────────
+    try:
+        result = AssignGate(bcn, target)
+    except Exception as e:
+        messagebox.showerror("Error", f"Gate assignment failed:\n{e}")
+        return
+
     if result == -1:
-        messagebox.showerror("Failed", f"No free gate available for {aircraft_id}")
+        messagebox.showerror("No Gate Available",
+            f"No free gate could be assigned to aircraft '{aircraft_id}'.\n"
+            "All compatible gates may be occupied.")
         return
+
     gate_name = ""
     for t in bcn.terminals:
         for a in t.areas:
             for g in a.gates:
                 if g.ID == aircraft_id:
                     gate_name = g.name
-    messagebox.showinfo("Gate Assigned",
-        f"Aircraft: {aircraft_id}\nAirline: {target.company}\n"
-        f"Origin: {target.origin}\nGate: {gate_name}")
+                    break
 
+    # ── NEW: handle edge case where gate was assigned but name not found ──
+    if gate_name == "":
+        messagebox.showwarning(
+            "Gate Assigned",
+            f"Aircraft '{aircraft_id}' was assigned a gate, but the gate name could not be retrieved."
+        )
+        return
+
+    messagebox.showinfo("Gate Assigned",
+        f"Aircraft:  {aircraft_id}\n"
+        f"Airline:   {target.company}\n"
+        f"Origin:    {target.origin}\n"
+        f"Gate:      {gate_name}")
+
+def FreeGateUI():
+    if bcn is None:
+        messagebox.showerror("Error", "Load airport structure first")
+        return
+    aircraft_id = get_value(aircraft_entry, PH_AIRCRAFT)
+    if aircraft_id == "":
+        messagebox.showerror("Error", "Enter an aircraft ID to free its gate.")
+        return
+    result = FreeGate(bcn, aircraft_id)
+    if result == -1:
+        messagebox.showerror("Not Found",
+            f"No occupied gate found for aircraft '{aircraft_id}'.")
+    else:
+        messagebox.showinfo("Gate Freed",
+            f"Gate for aircraft '{aircraft_id}' has been released.")
+
+def AssignNightGatesUI():
+    if bcn is None:
+        messagebox.showerror("Error", "Load airport structure first")
+        return
+
+    arrivals, err = LoadMovements("Arrivals.txt")
+    if err == -1:
+        messagebox.showerror("Error", "Arrivals.txt not found")
+        return
+
+    departures, err = LoadMovements("Departures.txt", is_departure=True)
+    if err == -1:
+        messagebox.showerror("Error", "Departures.txt not found")
+        return
+
+    merged = MergeMovements(arrivals, departures)
+    if merged == -1:
+        messagebox.showerror("Error", "Could not merge arrivals and departures.")
+        return
+
+    result = AssignNightGates(bcn, merged)
+    if result == 0:
+        messagebox.showwarning("No Night Aircraft", "No overnight aircraft found.")
+    else:
+        messagebox.showinfo("Done", f"Gates assigned to {result} overnight aircraft.")
+
+def PlotDayOccupancyUI():
+    if bcn is None:
+        messagebox.showerror("Error", "Load airport structure first")
+        return
+    try:
+        aircrafts, err = LoadMovements("Arrivals.txt")
+        if err == -1:
+            messagebox.showerror("Error", "Arrivals.txt not found")
+            return
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not load arrivals:\n{e}")
+        return
+    if not aircrafts:
+        messagebox.showwarning("No Data", "No arrivals data found.")
+        return
+    fig = PlotDayOccupancy(bcn, aircrafts)  # ← capture the figure
+    if fig is not None:
+        ShowPlot(fig)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # AIRLINE FILTER PANEL (for PlotAl)
@@ -638,31 +935,36 @@ def AssignGateUI():
 def BuildAirlineFilter(right_frame, graph_frame):
     global airline_search_var
 
-    Label(right_frame, text="Airline Filter", bg="#222233", fg="#c084fc",
+    Label(right_frame, text="Airline Filter", bg=BG_PANEL, fg=TEXT_ACCENT,
           font=("Segoe UI", 11, "bold")).pack(pady=10)
 
     airline_search_var = StringVar()
 
     search_entry = Entry(right_frame, textvariable=airline_search_var, width=25,
-                         fg=PLACEHOLDER_COLOR, bg="#2e2e44",
-                         insertbackground="white", relief=FLAT)
+                         fg=PLACEHOLDER_COLOR, bg=BG_SECONDARY,
+                         insertbackground=TEXT_PRIMARY, relief=FLAT)
     search_entry.pack(pady=5, padx=8, fill=X, ipady=4)
     add_placeholder(search_entry, "Search airline…")
 
-    available_box = Listbox(right_frame, bg="#2e2e44", fg="white",
-                            selectbackground="#7c3aed", relief=FLAT,
+    available_box = Listbox(right_frame, bg=BG_SECONDARY, fg=TEXT_PRIMARY,
+                            selectbackground=BTN_BG, relief=FLAT,
                             height=10, exportselection=False)
     available_box.pack(padx=8, pady=4, fill=X)
 
-    Label(right_frame, text="Selected", bg="#222233", fg="white",
+    Label(right_frame, text="Selected", bg=BG_PANEL, fg=TEXT_PRIMARY,
           font=("Segoe UI", 8, "bold")).pack()
 
-    selected_box = Listbox(right_frame, bg="#2e2e44", fg="#c084fc",
-                           selectbackground="#7c3aed", relief=FLAT,
+    selected_box = Listbox(right_frame, bg=BG_SECONDARY, fg=TEXT_ACCENT,
+                           selectbackground=BTN_BG, relief=FLAT,
                            height=6, exportselection=False)
     selected_box.pack(padx=8, pady=4, fill=X)
 
-    data     = LoadArrivals()
+    # ── NEW: guard against arrivals load failure ─────────────────────────
+    data, err = LoadMovements("Arrivals.txt")
+    if err == -1:
+        messagebox.showerror("Error", "Arrivals.txt not found")
+        return
+
     airlines = sorted(set(d.company for d in data))
 
     def refresh_available():
@@ -686,7 +988,7 @@ def BuildAirlineFilter(right_frame, graph_frame):
                 selected_airlines.append(val)
             refresh_selected()
         except:
-            pass
+            messagebox.showerror("Error", "Select an airline from the list first.")
 
     def remove():
         try:
@@ -694,7 +996,7 @@ def BuildAirlineFilter(right_frame, graph_frame):
             selected_airlines.remove(val)
             refresh_selected()
         except:
-            pass
+            messagebox.showerror("Error", "Select a selected airline to remove first.")
 
     def clear():
         selected_airlines.clear()
@@ -702,15 +1004,15 @@ def BuildAirlineFilter(right_frame, graph_frame):
 
     airline_search_var.trace_add("write", lambda *args: refresh_available())
 
-    btn_cfg = dict(bg="#3a3a5c", fg="white", relief=FLAT,
-                   activebackground="#7c3aed", activeforeground="white",
+    btn_cfg = dict(bg=CTRL_BG, fg=TEXT_PRIMARY, relief=FLAT,
+                   activebackground=BTN_BG, activeforeground=TEXT_PRIMARY,
                    font=("Segoe UI", 8), cursor="hand2")
 
     Button(right_frame, text="Add →",    command=add,   **btn_cfg).pack(padx=8, pady=2, fill=X, ipady=3)
     Button(right_frame, text="← Remove", command=remove,**btn_cfg).pack(padx=8, pady=2, fill=X, ipady=3)
     Button(right_frame, text="Clear",    command=clear, **btn_cfg).pack(padx=8, pady=2, fill=X, ipady=3)
-    Button(right_frame, text="Apply", bg="#7c3aed", fg="white", relief=FLAT,
-           activebackground="#6d28d9", font=("Segoe UI", 9, "bold"),
+    Button(right_frame, text="Apply", bg=BTN_BG, fg=TEXT_PRIMARY, relief=FLAT,
+           activebackground=BTN_HOVER, font=("Segoe UI", 9, "bold"),
            command=PlotAl, cursor="hand2").pack(padx=8, pady=8, fill=X, ipady=5)
 
     refresh_available()
@@ -721,18 +1023,18 @@ def BuildAirlineFilter(right_frame, graph_frame):
 # LAYOUT
 # ═══════════════════════════════════════════════════════════════════════════
 
-left = Frame(root, bg="#2a2a3d")
+left = Frame(root, bg=BG_MAIN)
 left.grid(row=0, column=0, sticky="nsew")
 
-Label(left, text="AIRPORT CONTROL", bg="#2a2a3d", fg="#c084fc",
+Label(left, text="AIRPORT CONTROL", bg=BG_MAIN, fg=TEXT_ACCENT,
       font=("Segoe UI", 16, "bold")).grid(row=0, column=0, pady=10)
 
 BTN = {
-    "bg": "#7c3aed", "fg": "white", "font": FONT_B,
+    "bg": BTN_BG, "fg": TEXT_PRIMARY, "font": FONT_B,
     "width": 24, "height": 1, "relief": "flat"
 }
 
-Label(left, text="Graphs", bg="#2a2a3d", fg="#c084fc").grid()
+Label(left, text="Graphs", bg=BG_MAIN, fg=TEXT_ACCENT).grid()
 
 Button(left, text="Airports",      command=PlotAp,      **BTN).grid(pady=2)
 Button(left, text="Show Airlines", command=PlotAl,      **BTN).grid(pady=2)
@@ -742,11 +1044,11 @@ Button(left, text="Map Airports",  command=MapAp,       **BTN).grid(pady=2)
 Button(left, text="Map Flights",   command=MapFl,       **BTN).grid(pady=2)
 Button(left, text="Long Flights",  command=MapFlLong,   **BTN).grid(pady=2)
 
-Label(left, text="Airports", bg="#2a2a3d", fg="#c084fc").grid(pady=5)
+Label(left, text="Airports", bg=BG_MAIN, fg=TEXT_ACCENT).grid(pady=5)
 
-icao      = Entry(left, width=30, bg="#3a3a5c", fg=PLACEHOLDER_COLOR, insertbackground="white")
-latitude  = Entry(left, width=30, bg="#3a3a5c", fg=PLACEHOLDER_COLOR, insertbackground="white")
-longitude = Entry(left, width=30, bg="#3a3a5c", fg=PLACEHOLDER_COLOR, insertbackground="white")
+icao      = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
+latitude  = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
+longitude = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
 icao.grid(pady=1);      add_placeholder(icao,      PH_ICAO)
 latitude.grid(pady=1);  add_placeholder(latitude,  PH_LAT)
 longitude.grid(pady=1); add_placeholder(longitude, PH_LON)
@@ -755,14 +1057,14 @@ Button(left, text="Save",   command=Save,   **BTN).grid(pady=2)
 Button(left, text="Add",    command=Add,    **BTN).grid(pady=2)
 Button(left, text="Remove", command=Remove, **BTN).grid(pady=2)
 
-Label(left, text="Operations", bg="#2a2a3d", fg="#c084fc").grid(pady=5)
+Label(left, text="Operations", bg=BG_MAIN, fg=TEXT_ACCENT).grid(pady=5)
 
-Button(left, text="Load Structure", command=LoadAP,        **BTN).grid(pady=2)
 Button(left, text="Occupancy",      command=ShowOccupancy, **BTN).grid(pady=2)
+Button(left, text="Day Occupancy Chart", command=PlotDayOccupancyUI, **BTN).grid(pady=2)
 
-terminal_entry = Entry(left, width=30, bg="#3a3a5c", fg=PLACEHOLDER_COLOR, insertbackground="white")
-airline_entry  = Entry(left, width=30, bg="#3a3a5c", fg=PLACEHOLDER_COLOR, insertbackground="white")
-aircraft_entry = Entry(left, width=30, bg="#3a3a5c", fg=PLACEHOLDER_COLOR, insertbackground="white")
+terminal_entry = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
+airline_entry  = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
+aircraft_entry = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
 terminal_entry.grid(pady=1); add_placeholder(terminal_entry, PH_TERMINAL)
 airline_entry.grid(pady=1);  add_placeholder(airline_entry,  PH_AIRLINE)
 
@@ -772,15 +1074,16 @@ Button(left, text="Search Airline", command=SearchAirline,            **BTN).gri
 aircraft_entry.grid(pady=1); add_placeholder(aircraft_entry, PH_AIRCRAFT)
 
 Button(left, text="Assign Gate", command=AssignGateUI, **BTN).grid(pady=2)
+Button(left, text="Free Gate", command=FreeGateUI, **BTN).grid(pady=2)
+Button(left, text="Assign Night Gates", command=AssignNightGatesUI,  **BTN).grid(pady=2)
 
 
 # ── Right visualiser panel ────────────────────────────────────────────────
-frame3 = Frame(root, bg="#2a2a3d")
+frame3 = Frame(root, bg=BG_MAIN)
 frame3.grid(row=0, column=1, sticky="nsew")
 frame3.rowconfigure(0, weight=1)
 frame3.columnconfigure(0, weight=1)
 
-Label(frame3, text="Select a function", bg="#2a2a3d", fg="#c084fc",
-      font=("Segoe UI", 14)).grid()
+Label(frame3, text="Select a function", bg=BG_MAIN, fg=TEXT_ACCENT, font=("Segoe UI", 14)).grid(pady=5)
 
 root.mainloop()
