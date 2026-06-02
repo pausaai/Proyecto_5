@@ -79,7 +79,7 @@ def PlotArrivals(aircrafts):
         hour = int(aircrafts[i].time.split(':')[0])
         count[hour] = count[hour] + 1
         i = i + 1
-    ax.bar(range(24), count, color="#d4664b")
+    ax.bar(range(24), count, color="#334155")
     ax.set_title('Landing Frequency')
     ax.set_xlabel('Hour')
     ax.set_ylabel('Number of landings')
@@ -139,7 +139,7 @@ def PlotAirlines(aircrafts):
             different = different + [current]
             count = count + [1]
         d = d + 1
-    ax.bar(different, count, color="#d4664b")
+    ax.bar(different, count, color="#334155")
     ax.set_title('Airline Flights')
     ax.set_xlabel('Airlines')
     ax.set_ylabel('Number of arriving aircraft')
@@ -165,7 +165,7 @@ def PlotFlightsType(aircrafts):
             notschengen = notschengen + 1
         i = i + 1
     ax.bar('Schengen', schengen, color='#d4664b', label='Schengen')
-    ax.bar('Not Schengen', notschengen, color='#ff5c3b', label='Not Schengen')
+    ax.bar('Not Schengen', notschengen, color='#334155', label='Not Schengen')
     ax.set_title('Arrival Origin')
     ax.set_ylabel('Count')
     ax.legend()
