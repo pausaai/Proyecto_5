@@ -358,7 +358,6 @@ def Add():
     lat      = get_value(latitude,  PH_LAT)
     lon      = get_value(longitude, PH_LON)
 
-    # ── NEW: validate all fields before adding ────────────────────────────
     if icao_val == "":
         messagebox.showerror("Error", "ICAO code is required.")
         return
@@ -368,6 +367,22 @@ def Add():
     if lon == "":
         messagebox.showerror("Error", "Longitude is required.")
         return
+
+    try:
+        a = Airport()
+        a.icao      = icao_val
+        a.latitude  = ConvertCoordinates(lat)
+        a.longitude = ConvertCoordinates(lon)
+        SetSchengen(a)
+        result = AddAirport(a)
+        if lat != "" and lon != "" and result is not False:
+            messagebox.showinfo("Added", f"Airport '{icao_val}' added successfully.")
+        elif result == "noticao" or result is False:
+            messagebox.showerror("Error", "Could not add airport. Check the format")
+        elif result is True:
+            messagebox.showerror("Error", "Airport is already on the list")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to add airport:\n{e}")
 
     try:
         a = Airport()
