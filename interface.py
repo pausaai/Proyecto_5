@@ -1071,6 +1071,7 @@ Button(left, text="Airports",      command=PlotAp,      **BTN).grid(pady=2)
 Button(left, text="Show Airlines", command=PlotAl,      **BTN).grid(pady=2)
 Button(left, text="Arrivals",      command=PlotArrRate, **BTN).grid(pady=2)
 Button(left, text="Flight Types",  command=PlotFlTy,    **BTN).grid(pady=2)
+Button(left, text="Day Occupancy Chart", command=PlotDayOccupancyUI, **BTN).grid(pady=2)
 Button(left, text="Map Airports",  command=MapAp,       **BTN).grid(pady=2)
 Button(left, text="Map Flights",   command=MapFl,       **BTN).grid(pady=2)
 Button(left, text="Long Flights",  command=MapFlLong,   **BTN).grid(pady=2)
@@ -1091,7 +1092,7 @@ Button(left, text="Remove", command=Remove, **BTN).grid(pady=2)
 Label(left, text="Operations", bg=BG_MAIN, fg=TEXT_ACCENT).grid(pady=5)
 
 Button(left, text="Occupancy",      command=ShowOccupancy, **BTN).grid(pady=2)
-Button(left, text="Day Occupancy Chart", command=PlotDayOccupancyUI, **BTN).grid(pady=2)
+
 
 terminal_entry = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
 airline_entry  = Entry(left, width=30, bg=CTRL_BG, fg=PLACEHOLDER_COLOR, insertbackground=TEXT_PRIMARY)
