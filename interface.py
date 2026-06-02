@@ -332,8 +332,6 @@ def Save():
     icao_val = get_value(icao, PH_ICAO)
     lat      = get_value(latitude,  PH_LAT)
     lon      = get_value(longitude, PH_LON)
-
-    # ── NEW: validate all three fields ────────────────────────────────────
     if icao_val == "":
         messagebox.showerror("Error", "ICAO code is required.")
         return
@@ -347,9 +345,13 @@ def Save():
         a.latitude  = ConvertCoordinates(lat)
         a.longitude = ConvertCoordinates(lon)
         SetSchengen(a)
-        SaveSchengenAirports(a)
-        # ── NEW: success confirmation ──────────────────────────────────────
-        messagebox.showinfo("Saved", f"Airport '{icao_val}' saved successfully.")
+        result = SaveSchengenAirports(a)
+        if result is False:
+            messagebox.showerror("Error", f"Failed to save airport. Check format or console for issue.")
+        elif result is True:
+            messagebox.showerror("Error", f"Airport is already on the list")
+        elif result == "add":
+            messagebox.showinfo("Saved", f"Airport '{icao_val}' saved successfully.")
     except Exception as e:
         messagebox.showerror("Error", f"Failed to save airport:\n{e}")
 
