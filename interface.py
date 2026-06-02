@@ -1017,7 +1017,21 @@ def BuildAirlineFilter(right_frame, graph_frame):
 
     refresh_available()
     refresh_selected()
+def CheckConflictsUI():
+    # Merged aircraft list from your loaded departures and arrivals
+    # (Assuming you have a global list or can compile it)
+    all_aircraft = MergeMovements(arrivals, departures)  # matching your current aircraft.py setup
 
+    # Run simulation / check gates
+    conflicts = DetectGateConflicts(bcn_airport, all_aircraft)
+
+    if not conflicts:
+        messagebox.showinfo("Conflict Check", "Success! No gate conflicts detected for today's schedule.")
+    else:
+        conflict_msg = "⚠️ GATE CONFLICTS DETECTED:\n\n"
+        for c in conflicts:
+            conflict_msg += f"Gate {c['gate']}: Flight {c['flight1']} conflicts with {c['flight2']} ({c['overlap']})\n"
+        messagebox.showwarning("Conflict Warning", conflict_msg)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # LAYOUT
@@ -1076,7 +1090,7 @@ aircraft_entry.grid(pady=1); add_placeholder(aircraft_entry, PH_AIRCRAFT)
 Button(left, text="Assign Gate", command=AssignGateUI, **BTN).grid(pady=2)
 Button(left, text="Free Gate", command=FreeGateUI, **BTN).grid(pady=2)
 Button(left, text="Assign Night Gates", command=AssignNightGatesUI,  **BTN).grid(pady=2)
-
+Button(left, text="Detect Gate Conflicts", command=CheckConflictsUI, **BTN).grid(pady=2)
 
 # ── Right visualiser panel ────────────────────────────────────────────────
 frame3 = Frame(root, bg=BG_MAIN)
