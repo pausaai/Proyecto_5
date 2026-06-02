@@ -230,7 +230,39 @@ def AssignGatesAtTime(bcn, aircrafts, time, departures):
                 not_assigned += 1
 
     return not_assigned
-
+def DetectGateConflicts(barcelona_ap, aircrafts):
+    """
+    Detects if multiple aircraft are assigned to the same gate at overlapping times.
+    Assumes an aircraft occupies a gate from its 'time' (arrival) until 'dep_time' (departure).
+    Returns a list of dictionaries detailing the conflicts.
+    """
+    conflicts = []
+    # Group aircraft by their assigned gate
+    gate_allocations = {}
+    
+    for a in aircrafts:
+        # Assuming you store the gate name in an attribute or can cross-reference it
+        if hasattr(a, 'assigned_gate') and a.assigned_gate:
+            if a.assigned_gate not in gate_allocations:
+                gate_allocations[a.assigned_gate] = []
+            gate_allocations[a.assigned_gate].append(a)
+            
+    # Check overlaps for each gate
+    for gate_name, flights in gate_allocations.items():
+        for i in range(len(flights)):
+            for j in range(i + 1, len(flights)):
+                f1 = flights[i]
+                f2 = flights[j]
+                
+                # Check if times overlap: (Arr1 < Dep2) and (Arr2 < Dep1)
+                if f1.time < f2.dep_time and f2.time < f1.dep_time:
+                    conflicts.append({
+                        "gate": gate_name,
+                        "flight1": f1.id,
+                        "flight2": f2.id,
+                        "overlap": f"{max(f1.time, f2.time)} to {min(f1.dep_time, f2.dep_time)}"
+                    })
+    return conflicts
 
 def PlotDayOccupancy(bcn, aircrafts):
     import matplotlib.pyplot as plt
