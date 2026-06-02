@@ -32,5 +32,10 @@ En primer lugar, comenzamos repartiendo y gestionando la prioridad de cada parte
 Previamente, nos habíamos organizado las distintas tareas. Al finalizar la versión, hemos implementado la gestión de puertas de embarque del aeropuerto LEBL. Creamos las clases Gate, BoardingArea, Terminal y BarcelonaAP, y desarrollamos funciones para cargar la estructura del aeropuerto desde fichero, asignar puertas a aeronaves según su aerolínea y tipo de vuelo (Schengen o no Schengen), buscar terminales por aerolínea y consultar la ocupación de puertas. Todo integrado en la interfaz gráfica existente que para hacer espacio suficiente para las nuevas funciones incoporadas a la version 3 hemos cmabiado el color para hacerla más visual y hemos simplificado ciertos aspectos como el espacio de gráficas,...
 
 link to video 3:  https://drive.google.com/file/d/13vJa1dv24CRu-8p0fXUxtejOOKqD0dO3/view?usp=sharing
+
 VERSION 4
+En primer lugar, al enfrentarnos a la versión 4, nos encontramos con un enfoque basado plenamente en la iniciativa propia y la creatividad del grupo, dado que la guía del proyecto apenas fijaba requisitos obligatorios. Tras analizar el estado de nuestra aplicación y con el firme objetivo de aspirar a la excelencia (una calificación de 10), decidimos orientar los esfuerzos a resolver las debilidades del panel visualizador y dar el salto desde una herramienta de consulta estática hacia un verdadero sistema de optimización y gestión operativa aeroportuaria.
+
+
+
 link to video 4:
