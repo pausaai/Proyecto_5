@@ -1,12 +1,16 @@
 from airport import *
 import math as math
 
+
 class Aircraft:
     def __init__(self):
         self.id = ""
         self.company = ""
-        self.origin = ""
+        self.airport = ""
         self.time = "00:00"
+        self.destin = ""
+        self.dep_time = "00:00"
+
 # Clase que representa un avión con sus atributos: id, aerolínea, origen y hora de llegada.
 
 def GoodTimeFormat(time):
@@ -34,28 +38,33 @@ def GoodTimeFormat(time):
     except ValueError:
         return False
 
-def LoadArrivals():
-    # Parámetros: ninguno
-    # Descripción: Lee el fichero Arrivals.txt y devuelve una lista de objetos Aircraft con los datos de cada vuelo.
-    arrivals = []
+
+def LoadMovements(filename, is_departure=False):
+    movements = []
     try:
-        f = open('Arrivals.txt', 'r')
-        f.readline()
-        line = f.readline()
-        while line != '':
-            data = line.split()
-            if len(data) == 4 and GoodTimeFormat(data[2]):
-                a = Aircraft()
-                a.id = data[0]
-                a.time = data[2]
-                a.origin = data[1]
-                a.company = data[3]
-                arrivals = arrivals + [a]
-            line = f.readline()
-        f.close()
-        return arrivals
+        f = open(filename, 'r')
     except FileNotFoundError:
-        return []
+        return [], -1
+
+    f.readline()  # skip header
+    line = f.readline()
+    while line != '':
+        data = line.split()
+        if len(data) == 4 and GoodTimeFormat(data[2]):
+            a = Aircraft()
+            a.id = data[0]
+            a.company = data[3]
+            if is_departure:
+                a.destination = data[1]
+                a.dep_time = data[2]
+            else:
+                a.airport = data[1]
+                a.time = data[2]
+            movements = movements + [a]
+        line = f.readline()
+    f.close()
+    return movements, 0
+
 
 def PlotArrivals(aircrafts):
     # Parámetros: aircrafts (list) -> lista de objetos Aircraft
@@ -64,17 +73,18 @@ def PlotArrivals(aircrafts):
         print('List is empty')
         return
     fig, ax = pyplot.subplots()
-    count = [0]*24
+    count = [0] * 24
     i = 0
     while i < len(aircrafts):
         hour = int(aircrafts[i].time.split(':')[0])
         count[hour] = count[hour] + 1
         i = i + 1
-    ax.bar(range(24), count, color = "#d4664b")
+    ax.bar(range(24), count, color="#d4664b")
     ax.set_title('Landing Frequency')
     ax.set_xlabel('Hour')
     ax.set_ylabel('Number of landings')
     return fig
+
 
 def SaveFlights(aircrafts):
     # Parámetros: aircrafts (list) -> lista de objetos Aircraft
@@ -93,8 +103,8 @@ def SaveFlights(aircrafts):
             time = aircrafts[i].time
         else:
             time = '-'
-        if aircrafts[i].origin != '':
-            origin = aircrafts[i].origin
+        if aircrafts[i].airport != '':
+            origin = aircrafts[i].airport
         else:
             origin = '-'
         if aircrafts[i].company != '':
@@ -102,8 +112,9 @@ def SaveFlights(aircrafts):
         else:
             company = '-'
         f.write(aid + ' ' + origin + ' ' + time + ' ' + company + '\n')
-        i = i+1
+        i = i + 1
     f.close()
+
 
 def PlotAirlines(aircrafts):
     # Parámetros:aircrafts (list) -> lista de objetos de aircraft
@@ -122,18 +133,19 @@ def PlotAirlines(aircrafts):
         while not found and i < len(different):
             if different[i] == current:
                 found = True
-                count[i] = count[i]+1
-            i = i+1
+                count[i] = count[i] + 1
+            i = i + 1
         if not found:
             different = different + [current]
             count = count + [1]
         d = d + 1
-    ax.bar(different, count, color = "#d4664b")
+    ax.bar(different, count, color="#d4664b")
     ax.set_title('Airline Flights')
     ax.set_xlabel('Airlines')
     ax.set_ylabel('Number of arriving aircraft')
     ax.tick_params(axis='x', rotation=90)
     return fig
+
 
 def PlotFlightsType(aircrafts):
     # Parámetros: aircrafts (list) -> lista de objetos Aircraft
@@ -146,7 +158,7 @@ def PlotFlightsType(aircrafts):
     notschengen = 0
     i = 0
     while i < len(aircrafts):
-        code = aircrafts[i].origin
+        code = aircrafts[i].airport
         if IsSchengenAirport(code):
             schengen = schengen + 1
         else:
@@ -159,42 +171,46 @@ def PlotFlightsType(aircrafts):
     ax.legend()
     return fig
 
-def DegreesToRadians(degrees):  #Había otra funcion que ya donde ya se tenia los vuelos en grados?
+
+def DegreesToRadians(degrees):  # Había otra funcion que ya donde ya se tenia los vuelos en grados?
     # Parámetros: degrees (float) -> ángulo en grados
     # Descripción: Convierte un ángulo de grados a radianes.
     return degrees * (math.pi / 180)
 
-def HaversineDistance(lat1, lon1, lat2 , lon2):
+
+def HaversineDistance(lat1, lon1, lat2, lon2):
     # Parámetros: lat1, lon1 (float) -> coordenadas del punto de origen
     #             lat2, lon2 (float) -> coordenadas del punto de destino
     # Descripción: Calcula la distancia en km entre dos coordenadas geográficas usando la fórmula de Haversine.
-    RadioTierra=6371.0 #KM
+    RadioTierra = 6371.0  # KM
 
-    rlat1= DegreesToRadians(lat1)
-    rlon1= DegreesToRadians(lon1)
-    rlat2= DegreesToRadians(lat2)
-    rlon2= DegreesToRadians(lon2)
+    rlat1 = DegreesToRadians(lat1)
+    rlon1 = DegreesToRadians(lon1)
+    rlat2 = DegreesToRadians(lat2)
+    rlon2 = DegreesToRadians(lon2)
 
-    diferencia_lat= rlat2 - rlat1
-    diferencia_lon= rlon2 - rlon1
-    #Usamos la formula del HAversine este
+    diferencia_lat = rlat2 - rlat1
+    diferencia_lon = rlon2 - rlon1
+    # Usamos la formula del HAversine este
 
-    a=(math.sin(diferencia_lat/2)**2+math.cos(rlat1)*math.cos(rlat2)*math.sin(diferencia_lon/2)**2)
+    a = (math.sin(diferencia_lat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(diferencia_lon / 2) ** 2)
 
-    c=2*math.atan2(math.sqrt(a),math.sqrt(1-a))
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     distance = RadioTierra * c
     return distance
+
 
 def FindAirports(airports, code):
     # Parámetros: airports (list) -> lista de objetos aeropuerto
     #             code (str) -> código ICAO a buscar
     # Descripción: Busca y devuelve un aeropuerto de la lista por su código ICAO, o None si no existe.
-    i=0
+    i = 0
     while i < len(airports):
         if airports[i].icao == code:
             return airports[i]
         i += 1
     return None
+
 
 def MapFlights(aircrafts):
     # Parámetros: aircrafts (list) -> lista de objetos Aircraft
@@ -203,27 +219,27 @@ def MapFlights(aircrafts):
     if len(aircrafts) == 0:
         print('List is empty')
         return
-     # Escribimos las coordenadas de LEBL
+    # Escribimos las coordenadas de LEBL
     LEBLlon = 2.07833
     LEBLlat = 41.29694
-    airports=LoadAirports()
-    kml=open('Flights.kml','w')
+    airports = LoadAirports()
+    kml = open('Flights.kml', 'w')
     kml.write('<kml xmlns="http://www.opengis.net/kml/2.2">\n')
     kml.write('<Document>\n')
 
-    i=0
+    i = 0
     while i < len(aircrafts):
-        codigoorigen = aircrafts[i].origin
+        codigoorigen = aircrafts[i].airport
         AeropuertoOrigen = FindAirports(airports, codigoorigen)
         if AeropuertoOrigen != None:
             origenlat = AeropuertoOrigen.latitude
             origenlon = AeropuertoOrigen.longitude
-        #Pillamos codigo para determinar si Schengen o no, discutir colores luego
+            # Pillamos codigo para determinar si Schengen o no, discutir colores luego
             if IsSchengenAirport(codigoorigen):
-                color='ffff0000'#Azul
+                color = 'ffff0000'  # Azul
             else:
-                color='#ff0000ff'#Rojo
-            #Trayectoria/linea de origen a destino
+                color = '#ff0000ff'  # Rojo
+            # Trayectoria/linea de origen a destino
             kml.write('<Placemark>\n')
             kml.write('<name>' + aircrafts[i].id + '</name>\n')
             kml.write('<Style>\n')
@@ -242,11 +258,12 @@ def MapFlights(aircrafts):
             kml.write('  </coordinates>\n')
             kml.write('</LineString>\n')
             kml.write('</Placemark>\n')
-        i+=1
+        i += 1
     kml.write('</Document>\n')
     kml.write('</kml>\n')
     kml.close()
     print('Flights.kml generated with ' + str(len(aircrafts)) + ' trajectories.')
+
 
 def LongDistanceArrivals(aircrafts):
     # Parámetros: aircrafts (list) -> lista de objetos Aircraft
@@ -255,47 +272,27 @@ def LongDistanceArrivals(aircrafts):
         print('List is empty')
         return
     i = 0
-    #Escribimos las coordenadas de LEBL
-    LEBLlon=2.07833
-    LEBLlat=41.29694
+    # Escribimos las coordenadas de LEBL
+    LEBLlon = 2.07833
+    LEBLlat = 41.29694
 
-    #Utilizamos la condicion de 2000KM
-    limite= 2000.0
-    airports=LoadAirports()
-    mayorlimite=[]
+    # Utilizamos la condicion de 2000KM
+    limite = 2000.0
+    airports = LoadAirports()
+    mayorlimite = []
     while i < len(aircrafts):
-        origincode = aircrafts[i].origin
-        originairport= FindAirports(airports, origincode)
+        origincode = aircrafts[i].airport
+        originairport = FindAirports(airports, origincode)
         if originairport != None:
             dist = HaversineDistance(originairport.latitude, originairport.longitude, LEBLlat, LEBLlon)
             if dist > limite:
                 mayorlimite.append(aircrafts[i])
-        i+= 1
+        i += 1
     return mayorlimite
-    
-#Leemos el fichero de salidas línea por línea, y por cada línea válida crea un objeto Aircraft rellenando solo los campos de salida (id, destination, dep_time, company).
-# Si el fichero no existe devuelve una lista vacía y un código de error -1.
-def LoadDepartures(filename):
-    departures = []
-    try:
-        f = open(filename, 'r')
-    except FileNotFoundError:
-        return [], -1
-    f.readline()  # skip header
-    line = f.readline()
-    while line != '':
-        data = line.split()
-        if len(data) == 4 and GoodTimeFormat(data[2]):
-            a = Aircraft()
-            a.id          = data[0]
-            a.destination = data[1]
-            a.dep_time    = data[2]
-            a.company     = data[3]
-            departures = departures + [a]
-        line = f.readline()
-    f.close()
-    return departures
 
+
+# Leemos el fichero de salidas línea por línea, y por cada línea válida crea un objeto Aircraft rellenando solo los campos de salida (id, destination, dep_time, company).
+# Si el fichero no existe devuelve una lista vacía y un código de error -1.
 def MergeMovements(arrivals, departures):
     if len(arrivals) == 0 or len(departures) == 0:
         return -1
@@ -304,12 +301,12 @@ def MergeMovements(arrivals, departures):
     i = 0
     while i < len(arrivals):
         a = Aircraft()
-        a.id          = arrivals[i].id
-        a.company     = arrivals[i].company
-        a.origin      = arrivals[i].origin
-        a.time        = arrivals[i].time
-        a.destination = arrivals[i].destination
-        a.dep_time    = arrivals[i].dep_time
+        a.id = arrivals[i].id
+        a.company = arrivals[i].company
+        a.origin = arrivals[i].airport
+        a.time = arrivals[i].time
+        a.destin = arrivals[i].destin
+        a.dep_time = arrivals[i].dep_time
         merged = merged + [a]
         i = i + 1
     # Igualamos llegadas con salidad
@@ -318,30 +315,32 @@ def MergeMovements(arrivals, departures):
         matched = False
         m = 0
         while m < len(merged):
-            same_id       = merged[m].id == departures[d].id
-            has_arrival   = merged[m].time != "00:00"
-            no_departure  = merged[m].dep_time == "00:00"
+            same_id = merged[m].id == departures[d].id
+            has_arrival = merged[m].time != "00:00"
+            no_departure = merged[m].dep_time == "00:00"
             arr_before_dep = merged[m].time < departures[d].dep_time
             if same_id and has_arrival and no_departure and arr_before_dep:
                 merged[m].destination = departures[d].destination
-                merged[m].dep_time    = departures[d].dep_time
+                merged[m].dep_time = departures[d].dep_time
                 matched = True
                 break
             m = m + 1
         # Si No podemos encajar una llegada con un salidad eso significa que es un vuelo nocturno veamos la section 4 del proyecto que nos dice
-        #que estos vuelo son nocturnos, salen pero no vuelven en el dia
+        # que estos vuelo son nocturnos, salen pero no vuelven en el dia
 
         if not matched:
             a = Aircraft()
-            a.id          = departures[d].id
-            a.company     = departures[d].company
+            a.id = departures[d].id
+            a.company = departures[d].company
             a.destination = departures[d].destination
-            a.dep_time    = departures[d].dep_time
+            a.dep_time = departures[d].dep_time
             merged = merged + [a]
         d = d + 1
     return merged
-#Basicamente recorremos todas las salidas hasta encotrAR una llegada con el mismo id cuya hora de llegada sea
-#antes y los fusionas en uno solo, si no añade el avion como avion nocturno
+
+
+# Basicamente recorremos todas las salidas hasta encotrAR una llegada con el mismo id cuya hora de llegada sea
+# antes y los fusionas en uno solo, si no añade el avion como avion nocturno
 
 def NightAircraft(aircrafts):
     if len(aircrafts) == 0:
@@ -353,6 +352,5 @@ def NightAircraft(aircrafts):
             night = night + [aircrafts[i]]
         i = i + 1
     return night
-#Esta funcion es mas sencilla creamos lista night y hacemos que vaya añadiendo aviones que sean nocturnos
-#Es decir que no tenga llegadas, porque o paso la noche en LEBL o salió muy tarde sin volver
-
+# Esta funcion es mas sencilla creamos lista night y hacemos que vaya añadiendo aviones que sean nocturnos
+# Es decir que no tenga llegadas, porque o paso la noche en LEBL o salió muy tarde sin volver
