@@ -1,3 +1,8 @@
+import copy
+
+from aircraft import *
+
+
 class Gate:
     def __init__(self):
         self.name = ""
@@ -55,9 +60,9 @@ def LoadAirlines(terminal, t_name):
     return terminal
 
 
-def LoadAirportStructure(filename):
+def LoadAirportStructure():
     try:
-        f = open(filename, "r")
+        f = open("Terminals.txt", "r")
     except:
         return -1
 
@@ -131,20 +136,25 @@ def SearchTerminal(bcn, name):
 
 def AssignGate(bcn, aircraft):
     terminal_name = SearchTerminal(bcn, aircraft.company)
-    if terminal_name == "":
-        print("Airline not found in any terminal")
-        return -1
+    if terminal_name != "":
+        terminal = next((t for t in bcn.terminals if t.name == terminal_name), None)
+        if terminal is not None:
+            for area in terminal.areas:
+                for gate in area.gates:
+                    if gate.free:
+                        gate.free = False
+                        gate.ID = aircraft.id
+                        return 0
+    is_schengen = IsSchengenAirport(aircraft.airport)
+    for terminal in bcn.terminals:
+        for area in terminal.areas:
+            if area.type == is_schengen:
+                for gate in area.gates:
+                    if gate.free:
+                        gate.free = False
+                        gate.ID = aircraft.id
+                        return 0
 
-    terminal = next((t for t in bcn.terminals if t.name == terminal_name), None)
-    if terminal is None:
-        return -1
-
-    for area in terminal.areas:
-        for gate in area.gates:
-            if gate.free:
-                gate.free = False
-                gate.ID   = aircraft.id
-                return 0
     return -1
 
 def AssignNightGates(bcn, aircrafts):
@@ -154,7 +164,129 @@ def AssignNightGates(bcn, aircrafts):
         return -1
     i = 0
     while i < len(aircrafts):
-        # Only process aircraft with no arrival data (night aircraft)
-        if aircrafts[i].time == "00:00" and aircrafts[i].origin == "":
+
+        if aircrafts[i].time == "00:00" and aircrafts[i].airport == "":
             AssignGate(bcn, aircrafts[i])
         i = i + 1
+
+def AssignNightGates(bcn, aircrafts):
+    #VERIFICAMOS con la condicion aircrafts[i].time == "00:00" and aircrafts[i].origin == "" que no tiene llegadas, aka es nocturno
+    #Luego con funcion AssigGate le asignamos un puerta y pasa al siguiente
+    night = NightAircraft(aircrafts)
+    if night == -1 or len(night) == 0:
+        return 0
+
+    for aircraft in night:
+        AssignGate(bcn, aircraft)
+
+    return len(night)
+
+
+def FreeGate(bcn, id):
+    t = 0
+    while t < len(bcn.terminals):
+        terminal = bcn.terminals[t]
+        a = 0
+        while a < len(terminal.areas):
+            area = terminal.areas[a]
+            g = 0
+            while g < len(area.gates):
+                gate = area.gates[g]
+                if gate.free == False and gate.ID == id:
+                    gate.free = True
+                    gate.ID = ""
+                    return 0
+                g += 1
+            a += 1
+        t += 1
+    return -1
+
+
+def AssignGatesAtTime(bcn, aircrafts, time, departures):
+    given_hour = int(time.split(":")[0])
+    events = []
+    for aircraft in aircrafts:
+        dep_time = departures.get(aircraft.id, "")
+        if dep_time != "" and dep_time != "00:00":
+            dep_hour = int(dep_time.split(":")[0])
+            dep_min = int(dep_time.split(":")[1])
+            if dep_hour == given_hour:
+                events.append((dep_hour, dep_min, "departure", aircraft))
+
+        if aircraft.time != "" and aircraft.time != "00:00":
+            land_hour = int(aircraft.time.split(":")[0])
+            land_min = int(aircraft.time.split(":")[1])
+            if land_hour == given_hour:
+                events.append((land_hour, land_min, "arrival", aircraft))
+
+    events.sort(key=lambda e: (e[1], 0 if e[2] == "departure" else 1))
+
+    not_assigned = 0
+    for _, _, event_type, aircraft in events:
+        if event_type == "departure":
+            FreeGate(bcn, aircraft.id)
+        else:
+            if AssignGate(bcn, aircraft) == -1:
+                not_assigned += 1
+
+    return not_assigned
+
+
+def PlotDayOccupancy(bcn, aircrafts):
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as ticker
+    import numpy as np
+
+    departures_list, err = LoadMovements("Departures.txt", is_departure=True)
+    if err == -1:
+        print("Departures.txt not found")
+        return
+
+    departures = {a.id: a.dep_time for a in departures_list}
+
+    def count_occupied_gates(airport):
+        return [
+            sum(1 for area in terminal.areas for gate in area.gates if not gate.free)
+            for terminal in airport.terminals
+        ]
+
+    terminal_names = [t.name for t in bcn.terminals]
+    hours = list(range(1, 24))
+    unassigned_counts = []
+    terminal_counts = []
+
+    for hour in hours:
+        bcn_copy = copy.deepcopy(bcn)  # ← fresh state for each hour
+        unassigned_counts.append(AssignGatesAtTime(bcn_copy, aircrafts, f"{hour:02d}:00", departures))
+        terminal_counts.append(count_occupied_gates(bcn_copy))
+
+    x = np.arange(len(hours))
+    bar_width = 0.6 / max(len(terminal_names), 1)
+    colors = plt.colormaps["tab10"].colors
+
+    fig, ax1 = plt.subplots(figsize=(14, 6))
+
+    for idx, name in enumerate(terminal_names):
+        offsets = x + (idx - len(terminal_names) / 2 + 0.5) * bar_width
+        values = [terminal_counts[h][idx] for h in range(len(hours))]
+        ax1.bar(offsets, values, width=bar_width, label=name,
+                color=colors[idx % len(colors)], alpha=0.85, edgecolor="white", linewidth=0.5)
+
+    ax1.set_xlabel("Hour of day", fontsize=11)
+    ax1.set_ylabel("Gates occupied", fontsize=11)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels([f"{h:02d}:00" for h in hours], rotation=45, ha="right")
+    ax1.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    ax1.legend(title="Terminal", loc="upper left", fontsize=9)
+    ax1.set_title("Gate occupancy per terminal throughout the day", fontsize=13)
+
+    ax2 = ax1.twinx()
+    ax2.plot(x, unassigned_counts, color="crimson", marker="o",
+             linewidth=1.8, markersize=5, label="Unassigned aircraft", zorder=5)
+    ax2.set_ylabel("Unassigned aircraft", fontsize=11, color="crimson")
+    ax2.tick_params(axis="y", labelcolor="crimson")
+    ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    ax2.legend(loc="upper right", fontsize=9)
+
+    plt.tight_layout()
+    return fig
