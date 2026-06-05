@@ -38,4 +38,4 @@ En primer lugar, al enfrentarnos a la versión 4, nos encontramos con un enfoque
 
 
 
-link to video 4:
+link to video 4: https://studio.youtube.com/video/yRbtogyoVfQ/edit
